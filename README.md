@@ -1,10 +1,26 @@
+# Purpose
+
+This README is here to describe my analysis with the accompanying code.
+
+This analysis will look at the dynamic conditional correlations of the
+sector returns of the SWIX. The time period will start at January 1 2014
+and end at the most recent date October 29 2021. The data will then be
+subset for the month periods that South Africa experienced loadshedding.
+The aim of this paper is to see if there is a difference in sector
+dynamics between the Financials, Industrials and Resources for the SWIX.
+The DCC-GARCH model will be used to model the dynamic correlation
+structure of these returns during these periods of loadshedding and
+allow us to study the impact of loadshedding on the market.
+
+First we will load necessary packages and source our code files.
+
 ``` r
 pacman::p_load(modelsummary, gt, knitr, kableExtra, tidyverse, lubridate, tinytex, rmarkdown, crypto2, quantmod, MTS, rmgarch, rugarch, tbl2xts, fmxdat, ggthemes, summarytools, vars, tseries, pander, cowplot, qpcR, tidyquant, stargazer)
 
 list.files('code/', full.names = T, recursive = T) %>% as.list() %>% walk(~source(.))
 ```
 
-# FMX PROJECT
+Below is the code used to create this file and the Texevier document.
 
 ``` r
 CHOSEN_LOCATION <- "/Users/svenwellmann/Desktop/Masters Semester 2/Financial Econometrics/FMX_Project/"
@@ -168,6 +184,11 @@ stocks_sectors %>% group_by(Tickers) %>% summarise(first_date = min(date))
 
 # Doing the analysis with data given during the practical test
 
+Unfortunately I could not scrape the SWIX portfolio weights for the
+updated period and have had to use the data given. This leaves us with a
+slightly smaller sample and also does not include the months of
+significant loadshedding in 2022.
+
 ``` r
 T40 <- read_rds("data/T40.rds")
 
@@ -245,7 +266,14 @@ sector_return
 ``` r
 # Combine Dataframes
 sectors_cum_return <- rbind(sector_return[[1]], sector_return[[2]], sector_return[[3]]) %>% arrange(date)
-    
+```
+
+Below we look at the different return structure of the ALSI and SWIX for
+their respective sectors. We observe that the Industrials have seen the
+largest cumulative growth of all sectors. Resources have seen minimal
+cumulative growth, with majority of the growth being after 2017.
+
+``` r
 sectors_cum_return_plot <- sectors_cum_return %>% 
     ggplot() +
     geom_line(aes(date, cumreturn_Rand, colour = Portfolio), alpha = 0.8) + facet_wrap(~Sector) + fmxdat::fmx_cols() + 
@@ -254,9 +282,37 @@ sectors_cum_return_plot <- sectors_cum_return %>%
 sectors_cum_return_plot
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-8-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
-Subset the data into times of loadshedding and times without.
+## Weights plot
+
+To decide between the ALSI and SWIX I visualise the weight compositions
+of the indices.
+
+-   ALSI (J200)
+
+``` r
+weights_plot(T40, "ALSI")
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-10-1.png)
+
+-   SWIX (J400)
+
+``` r
+weights_plot(T40, "SWIX")
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-11-1.png)
+
+From the plots it can be seen that since 2020 the ALSI lowered their
+weighting of Financial stocks and increased their weighting of resource
+stocks in comparison to the SWIX. The SWIX also has less volatility in
+weight contribution. Because of this the SWIX is chosen as the
+representative portfolio.
+
+The portfolio returns are then stratified into periods of loadshedding
+and periods without loadshedding.
 
 ``` r
 sectors_cum_return <- sectors_cum_return %>% filter(Portfolio == 'J400') # SWIX
@@ -278,12 +334,11 @@ xts_swix_return_loadshed <- swix_loadshed %>% tbl_xts(., cols_to_xts = "Returns"
 xts_swix_return_no_loadshed <- swix_no_loadshed %>% tbl_xts(., cols_to_xts = "Returns", spread_by = "Sector") 
 ```
 
-Plotting the Log returns of all sectors across the entire period.
+The Log returns of all sectors across the entire period are the plotted.
 
 ``` r
 log_returns_plot <- sectors_cum_return %>% mutate(Sector = factor(Sector, levels = c("Financials",  "Industrials", "Resources"))) %>% 
   ggplot() + geom_line(aes(x = date, y = Returns, colour = Sector, alpha = 1)) + 
-#ggtitle("Daily Log Returns") + 
 facet_wrap(~Sector, scales = "free_y", nrow = 3) + 
 guides(alpha = "none") + 
 fmxdat::theme_fmx() +
@@ -291,17 +346,19 @@ labs(x = "", y = "", subtitle = " ") +
 theme(legend.position = "none") +
 scale_color_hue(l = 20) + 
 scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
-    
 theme(axis.text = element_text(size = 7))
 
 log_returns_plot
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-10-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 # Fit DCC models
 
-## Whole Period
+The DCC model is then fit over the whole period, the period of
+loadshedding and the period without loadshedding. The gjrGARCH model is
+used for this analysis. The residuals of the GARCH model are then used
+in the DCC model.
 
 ``` r
 # Using the rugarch package, let's specify our own univariate
@@ -353,33 +410,20 @@ RcovList_nls <- rcov(fit.dcc_nls)
 
 covmat = matrix(RcovList, nrow(xts_swix_return), ncol(xts_swix_return) * ncol(xts_swix_return), byrow = TRUE)
 covmat_ls = matrix(RcovList, nrow(xts_swix_return_loadshed), ncol(xts_swix_return_loadshed) * ncol(xts_swix_return_loadshed), byrow = TRUE)
-```
-
-    ## Warning in matrix(RcovList, nrow(xts_swix_return_loadshed),
-    ## ncol(xts_swix_return_loadshed) * : data length [31122] is not a sub-multiple or
-    ## multiple of the number of rows [351]
-
-``` r
 covmat_nls = matrix(RcovList, nrow(xts_swix_return_no_loadshed), ncol(xts_swix_return_no_loadshed) * ncol(xts_swix_return_no_loadshed), byrow = TRUE)
-```
 
-    ## Warning in matrix(RcovList, nrow(xts_swix_return_no_loadshed),
-    ## ncol(xts_swix_return_no_loadshed) * : data length [31122] is not a sub-multiple
-    ## or multiple of the number of rows [3107]
-
-``` r
 mc1 = MCHdiag(xts_swix_return, covmat)
 ```
 
     ## Test results:  
     ## Q(m) of et: 
-    ## Test and p-value:  13.84826 0.1800263 
+    ## Test and p-value:  13.84812 0.1800328 
     ## Rank-based test: 
-    ## Test and p-value:  9.318271 0.5021883 
+    ## Test and p-value:  9.318195 0.5021954 
     ## Qk(m) of epsilon_t: 
-    ## Test and p-value:  122.7351 0.012456 
+    ## Test and p-value:  122.735 0.01245606 
     ## Robust Qk(m):  
-    ## Test and p-value:  80.72196 0.7475152
+    ## Test and p-value:  80.72196 0.7475154
 
 ``` r
 mc1_ls = MCHdiag(xts_swix_return_loadshed, covmat_ls)
@@ -387,13 +431,13 @@ mc1_ls = MCHdiag(xts_swix_return_loadshed, covmat_ls)
 
     ## Test results:  
     ## Q(m) of et: 
-    ## Test and p-value:  340.7819 0 
+    ## Test and p-value:  340.7813 0 
     ## Rank-based test: 
     ## Test and p-value:  93.51436 1.110223e-15 
     ## Qk(m) of epsilon_t: 
-    ## Test and p-value:  598.9079 0 
+    ## Test and p-value:  598.9071 0 
     ## Robust Qk(m):  
-    ## Test and p-value:  137.6818 0.0009136342
+    ## Test and p-value:  137.6813 0.0009137339
 
 ``` r
 mc1_nls = MCHdiag(xts_swix_return_no_loadshed, covmat_nls)
@@ -401,13 +445,16 @@ mc1_nls = MCHdiag(xts_swix_return_no_loadshed, covmat_nls)
 
     ## Test results:  
     ## Q(m) of et: 
-    ## Test and p-value:  1216.353 0 
+    ## Test and p-value:  1216.348 0 
     ## Rank-based test: 
-    ## Test and p-value:  581.7688 0 
+    ## Test and p-value:  581.7622 0 
     ## Qk(m) of epsilon_t: 
-    ## Test and p-value:  1703.15 0 
+    ## Test and p-value:  1703.145 0 
     ## Robust Qk(m):  
-    ## Test and p-value:  318.3764 0
+    ## Test and p-value:  318.3747 0
+
+The results have to be pulled out of the data using the following code.
+This will also rename our dynamic conditional correlations.
 
 ``` r
 dcc.time.var.cor <- rcor(fit.dcc)
@@ -433,7 +480,98 @@ dcc.time.var.cor_ls <- renamingdcc(ReturnSeries = xts_swix_return_loadshed, DCC.
 dcc.time.var.cor_nls <- renamingdcc(ReturnSeries = xts_swix_return_no_loadshed, DCC.TV.Cor = dcc.time.var.cor_nls)
 ```
 
-## Plots
+## Statistics
+
+First we asses the fit of the DCC model on the data.
+
+``` r
+library(data.table)
+```
+
+    ## 
+    ## Attaching package: 'data.table'
+
+    ## The following objects are masked from 'package:rmgarch':
+    ## 
+    ##     first, last
+
+    ## The following objects are masked from 'package:xts':
+    ## 
+    ##     first, last
+
+    ## The following objects are masked from 'package:lubridate':
+    ## 
+    ##     hour, isoweek, mday, minute, month, quarter, second, wday, week,
+    ##     yday, year
+
+    ## The following objects are masked from 'package:dplyr':
+    ## 
+    ##     between, first, last
+
+    ## The following object is masked from 'package:purrr':
+    ## 
+    ##     transpose
+
+``` r
+star_fit.dcc <- fit.dcc@mfit$matcoef[rownames(fit.dcc@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE] #%>% data.frame()
+
+# \\label{dccfitfull}
+
+stargazer(star_fit.dcc,
+          type = "latex",
+          title = "DCC GARCH Model Fit",
+          ci = TRUE,
+          ci.level = 0.95,
+          p.auto = TRUE,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          align = TRUE)
+```
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy
+Institute. E-mail: marek.hlavac at gmail.com % Date and time: Mon, Jan
+23, 2023 - 13:59:32 % Requires LaTeX packages: dcolumn
+``` r
+star_fit.dcc_ls <- fit.dcc_ls@mfit$matcoef[rownames(fit.dcc_ls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE]
+
+# \\label{dccfitls}
+
+stargazer(star_fit.dcc_ls,
+          type = "latex",
+          title = "Loadshedding DCC GARCH Model Fit",
+          ci = TRUE,
+          ci.level = 0.95,
+          p.auto = TRUE,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          align = TRUE) 
+```
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy
+Institute. E-mail: marek.hlavac at gmail.com % Date and time: Mon, Jan
+23, 2023 - 13:59:32 % Requires LaTeX packages: dcolumn
+``` r
+star_fit.dcc_nls <- fit.dcc_nls@mfit$matcoef[rownames(fit.dcc_nls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE]
+
+# \\label{dccfitnls}
+
+stargazer(star_fit.dcc_nls,
+          type = "latex",
+          title = "No Loadshedding DCC GARCH Model Fit",
+          ci = TRUE,
+          ci.level = 0.95,
+          p.auto = TRUE,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          align = TRUE)
+```
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy
+Institute. E-mail: marek.hlavac at gmail.com % Date and time: Mon, Jan
+23, 2023 - 13:59:33 % Requires LaTeX packages: dcolumn
+## DCC Plots
+
+The plots of the dynamic conditional correlations will be plotted for
+all sectors and their respective relationships. These plots will be
+repeated for the full period, with an indication of when the
+loadshedding periods were, as well as for just the loadshedding periods.
 
 ### Full Period
 
@@ -458,7 +596,7 @@ dcc.time.var.cor_r_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Resources_"
 dcc.time.var.cor_r_plot
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-19-1.png)
 
 ``` r
 dcc.time.var.cor_f_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Financials_", Pairs), !grepl("_Financials", Pairs))) + 
@@ -481,7 +619,7 @@ dcc.time.var.cor_f_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Financials_
 dcc.time.var.cor_f_plot
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-14-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-20-1.png)
 
 ``` r
 dcc.time.var.cor_i_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Industrials_", Pairs), !grepl("_Industrials", Pairs))) + 
@@ -504,7 +642,7 @@ dcc.time.var.cor_i_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Industrials
 dcc.time.var.cor_i_plot
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-15-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-21-1.png)
 
 ### Load Shedding
 
@@ -534,7 +672,7 @@ dcc.time.var.cor_ls_r_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Resou
 dcc.time.var.cor_ls_r_plot
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-17-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-23-1.png)
 
 ``` r
 dcc.time.var.cor_ls_i_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Industrials_", Pairs), !grepl("_Industrials", Pairs))) + 
@@ -550,7 +688,7 @@ dcc.time.var.cor_ls_i_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Indus
 dcc.time.var.cor_ls_i_plot
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-18-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-24-1.png)
 
 ``` r
 dcc.time.var.cor_ls_f_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Financials_", Pairs), !grepl("_Financials", Pairs))) + 
@@ -566,166 +704,7 @@ dcc.time.var.cor_ls_f_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Finan
 dcc.time.var.cor_ls_f_plot
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-19-1.png)
-
-## Statistics
-
-``` r
-stargazer(fit.dcc@mfit$matcoef,
-          type = "text",
-          title = "DCC GARCH Model Fit \\label{dccfitfull}",
-          ci = TRUE,
-          ci.level = 0.95,
-          p.auto = TRUE,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          align = TRUE)
-```
-
-    ## 
-    ## DCC GARCH Model Fit dccfitfull
-    ## ============================================================
-    ##                      Estimate Std. Error t value Pr(> | t| )
-    ## ------------------------------------------------------------
-    ##    [Resources].mu    0.00004    0.0002    0.170     0.865   
-    ##   [Resources].ar1     0.030     0.017     1.795     0.073   
-    ##  [Resources].omega   0.00000   0.00001    0.304     0.761   
-    ##  [Resources].alpha1   0.005     0.033     0.147     0.883   
-    ##  [Resources].beta1    0.947     0.050    18.749       0     
-    ##  [Resources].gamma1   0.086     0.027     3.183     0.001   
-    ##   [Resources].skew    0.981     0.026    38.178       0     
-    ##  [Resources].shape    13.588    4.517     3.008     0.003   
-    ##   [Industrials].mu    0.001     0.0002    2.777     0.005   
-    ##  [Industrials].ar1    -0.028    0.018    -1.608     0.108   
-    ## [Industrials].omega  0.00000   0.00000    1.755     0.079   
-    ## [Industrials].alpha1  0.017     0.009     1.822     0.068   
-    ## [Industrials].beta1   0.907     0.017    54.780       0     
-    ## [Industrials].gamma1  0.119     0.025     4.713    0.00000  
-    ##  [Industrials].skew   0.907     0.023    40.219       0     
-    ## [Industrials].shape   10.257    1.634     6.277       0     
-    ##   [Financials].mu     0.0004    0.0002    2.033     0.042   
-    ##   [Financials].ar1    -0.011    0.018    -0.620     0.535   
-    ##  [Financials].omega  0.00000   0.00000    0.966     0.334   
-    ## [Financials].alpha1   0.032     0.022     1.492     0.136   
-    ##  [Financials].beta1   0.907     0.033    27.601       0     
-    ## [Financials].gamma1   0.097     0.024     4.013    0.0001   
-    ##  [Financials].skew    0.970     0.024    40.477       0     
-    ##  [Financials].shape   10.568    1.968     5.371    0.00000  
-    ##     [Joint]dcca1      0.039     0.005     7.807       0     
-    ##     [Joint]dccb1      0.949     0.008    123.275      0     
-    ## ------------------------------------------------------------
-
-``` r
-#fit.dcc@mfit$matcoef %>% kable() %>% kable_styling()
-
-
-
-
-# add_stars <- function(p) {
-#     if (p < 0.001) {
-#         return("***")
-#     } else if (p < 0.01) {
-#         return("**")
-#     } else if (p < 0.05) {
-#         return("*")
-#     } else {
-#         return("")
-#     }
-# }
-
-# fit.dcc@mfit$matcoef[,-3]
-
-# kable(fit.dcc@mfit$matcoef[,-3], caption = "DCC GARCH Model", 
-#       col.names = c("Coefficient", "Std. Error", "p-value"), 
-#       align = c("l", "c", "c"), 
-#       digits = c(2, 2, 3),
-#       p.format = add_stars) %>% kable_styling()
-```
-
-``` r
-stargazer(fit.dcc_ls@mfit$matcoef,
-          type = "text",
-          title = "Loadshedding DCC GARCH Model Fit \\label{dccfitls}",
-          ci = TRUE,
-          ci.level = 0.95,
-          p.auto = TRUE,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          align = TRUE)
-```
-
-# Loadshedding DCC GARCH Model Fit dccfitls
-
-## Estimate Std. Error t value Pr(\> \| t\| )
-
-\[Resources\].mu -0.001 0.001 -0.538 0.591  
-\[Resources\].ar1 0.029 0.058 0.508 0.611  
-\[Resources\].omega 0.00004 0.00003 1.399 0.162  
-\[Resources\].alpha1 0.00000 0.101 0.00000 1.000  
-\[Resources\].beta1 0.791 0.161 4.907 0.00000  
-\[Resources\].gamma1 0.213 0.079 2.700 0.007  
-\[Resources\].skew 0.997 0.075 13.276 0  
-\[Resources\].shape 5.107 1.281 3.988 0.0001  
-\[Industrials\].mu 0.0004 0.001 0.695 0.487  
-\[Industrials\].ar1 -0.092 0.051 -1.802 0.072  
-\[Industrials\].omega 0.00001 0.00000 24.162 0  
-\[Industrials\].alpha1 0.00000 0.028 0.00000 1.000  
-\[Industrials\].beta1 0.825 0.023 35.958 0  
-\[Industrials\].gamma1 0.221 0.086 2.562 0.010  
-\[Industrials\].skew 0.883 0.077 11.502 0  
-\[Industrials\].shape 7.949 3.111 2.555 0.011  
-\[Financials\].mu -0.001 0.001 -0.926 0.355  
-\[Financials\].ar1 0.021 0.060 0.348 0.728  
-\[Financials\].omega 0.00003 0.00001 3.121 0.002  
-\[Financials\].alpha1 0.018 0.058 0.306 0.760  
-\[Financials\].beta1 0.672 0.071 9.408 0  
-\[Financials\].gamma1 0.336 0.109 3.073 0.002  
-\[Financials\].skew 0.923 0.069 13.379 0  
-\[Financials\].shape 7.643 2.992 2.555 0.011  
-\[Joint\]dcca1 0.050 0.015 3.414 0.001  
-\[Joint\]dccb1 0.895 0.032 27.578 0  
-————————————————————
-
-``` r
-stargazer(fit.dcc_nls@mfit$matcoef,
-          type = "text",
-          title = "No Loadshedding DCC GARCH Model Fit \\label{dccfitnls}",
-          ci = TRUE,
-          ci.level = 0.95,
-          p.auto = TRUE,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          align = TRUE)
-```
-
-# No Loadshedding DCC GARCH Model Fit dccfitnls
-
-## Estimate Std. Error t value Pr(\> \| t\| )
-
-\[Resources\].mu 0.0001 0.0003 0.489 0.625  
-\[Resources\].ar1 0.030 0.018 1.647 0.100  
-\[Resources\].omega 0.00000 0.00000 0.437 0.662  
-\[Resources\].alpha1 0.026 0.021 1.256 0.209  
-\[Resources\].beta1 0.934 0.035 26.758 0  
-\[Resources\].gamma1 0.069 0.026 2.712 0.007  
-\[Resources\].skew 0.999 0.026 38.024 0  
-\[Resources\].shape 14.393 3.698 3.892 0.0001  
-\[Industrials\].mu 0.001 0.0002 3.066 0.002  
-\[Industrials\].ar1 -0.022 0.019 -1.153 0.249  
-\[Industrials\].omega 0.00000 0.00001 0.365 0.715  
-\[Industrials\].alpha1 0.023 0.036 0.641 0.521  
-\[Industrials\].beta1 0.912 0.074 12.253 0  
-\[Industrials\].gamma1 0.102 0.061 1.677 0.094  
-\[Industrials\].skew 0.919 0.024 37.708 0  
-\[Industrials\].shape 11.223 3.875 2.896 0.004  
-\[Financials\].mu 0.001 0.0002 2.389 0.017  
-\[Financials\].ar1 -0.014 0.019 -0.720 0.471  
-\[Financials\].omega 0.00000 0.00001 0.369 0.712  
-\[Financials\].alpha1 0.039 0.051 0.771 0.441  
-\[Financials\].beta1 0.908 0.075 12.101 0  
-\[Financials\].gamma1 0.084 0.038 2.209 0.027  
-\[Financials\].skew 0.978 0.025 38.649 0  
-\[Financials\].shape 10.611 2.692 3.942 0.0001  
-\[Joint\]dcca1 0.036 0.005 6.747 0  
-\[Joint\]dccb1 0.954 0.008 120.632 0  
-————————————————————
+![](README_files/figure-markdown_github/unnamed-chunk-25-1.png)
 
 # Fit the DCC model on the entire period, the period of loadshedding and the period without loadshedding
 
@@ -759,7 +738,7 @@ TidyVol <- Vol %>% gather(Sector, Sigma, -date)
 ggplot(TidyVol) + geom_line(aes(x = date, y = Sigma, colour = Sector))
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-24-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-27-1.png)
 
 ## Summary statistics for DCC output
 
@@ -796,7 +775,7 @@ Mean
 0.6098155
 </td>
 <td style="text-align:right;">
-0.4088566
+0.4088567
 </td>
 <td style="text-align:right;">
 0.4732161
@@ -807,13 +786,13 @@ Mean
 Std.Dev
 </td>
 <td style="text-align:right;">
-0.1774642
+0.1774658
 </td>
 <td style="text-align:right;">
-0.2042140
+0.2042160
 </td>
 <td style="text-align:right;">
-0.1562120
+0.1562136
 </td>
 </tr>
 <tr>
@@ -821,13 +800,13 @@ Std.Dev
 Min
 </td>
 <td style="text-align:right;">
--0.2038085
+-0.2038162
 </td>
 <td style="text-align:right;">
--0.4322369
+-0.4322446
 </td>
 <td style="text-align:right;">
--0.1155755
+-0.1155816
 </td>
 </tr>
 <tr>
@@ -835,13 +814,13 @@ Min
 Max
 </td>
 <td style="text-align:right;">
-0.8744922
+0.8744942
 </td>
 <td style="text-align:right;">
-0.7944008
+0.7944039
 </td>
 <td style="text-align:right;">
-0.8173063
+0.8173090
 </td>
 </tr>
 </tbody>
@@ -914,10 +893,10 @@ Std.Dev
 Min
 </td>
 <td style="text-align:right;">
-0.2235939
+0.2235938
 </td>
 <td style="text-align:right;">
--0.0118184
+-0.0118185
 </td>
 <td style="text-align:right;">
 0.0996514
@@ -928,7 +907,7 @@ Min
 Max
 </td>
 <td style="text-align:right;">
-0.8128866
+0.8128867
 </td>
 <td style="text-align:right;">
 0.7211935
@@ -993,10 +972,10 @@ Mean
 Std.Dev
 </td>
 <td style="text-align:right;">
-0.1794256
+0.1794255
 </td>
 <td style="text-align:right;">
-0.2089849
+0.2089848
 </td>
 <td style="text-align:right;">
 0.1516229
@@ -1007,13 +986,13 @@ Std.Dev
 Min
 </td>
 <td style="text-align:right;">
--0.2036143
+-0.2036140
 </td>
 <td style="text-align:right;">
--0.4319188
+-0.4319185
 </td>
 <td style="text-align:right;">
--0.0908745
+-0.0908743
 </td>
 </tr>
 <tr>
@@ -1021,10 +1000,10 @@ Min
 Max
 </td>
 <td style="text-align:right;">
-0.8748960
+0.8748959
 </td>
 <td style="text-align:right;">
-0.8027733
+0.8027732
 </td>
 <td style="text-align:right;">
 0.8242636
