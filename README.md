@@ -15,7 +15,8 @@ allow us to study the impact of loadshedding on the market.
 First we will load necessary packages and source our code files.
 
 ``` r
-pacman::p_load(modelsummary, gt, knitr, kableExtra, tidyverse, lubridate, tinytex, rmarkdown, crypto2, quantmod, MTS, rmgarch, rugarch, tbl2xts, fmxdat, ggthemes, summarytools, vars, tseries, pander, cowplot, qpcR, tidyquant, stargazer)
+pacman::p_load(modelsummary, gt, knitr, kableExtra, tidyverse, lubridate, tinytex, rmarkdown, crypto2, quantmod, MTS, rmgarch, rugarch, tbl2xts, fmxdat, ggthemes, summarytools, vars, tseries, pander, cowplot, qpcR, tidyquant, stargazer, data.table)
+
 
 list.files('code/', full.names = T, recursive = T) %>% as.list() %>% walk(~source(.))
 ```
@@ -192,12 +193,6 @@ significant loadshedding in 2022.
 ``` r
 T40 <- read_rds("data/T40.rds")
 
-T40 %>% pull(date) %>% max()
-```
-
-    ## [1] "2021-10-29"
-
-``` r
 sectors <- T40 %>% pull(Sector) %>% unique()
 sector_return <- list()
 for(i in 1:length(sectors)){
@@ -209,61 +204,6 @@ for(i in 1:length(sectors)){
 }
 # Rename tibbles
 names(sector_return) <- sectors
-sector_return
-```
-
-    ## $Resources
-    ## # A tibble: 6,916 × 5
-    ## # Groups:   Portfolio [2]
-    ##    date       Portfolio   Returns cumreturn_Rand Sector   
-    ##    <date>     <chr>         <dbl>          <dbl> <chr>    
-    ##  1 2008-01-02 J200       0.0148            1     Resources
-    ##  2 2008-01-02 J400       0.0164            1     Resources
-    ##  3 2008-01-03 J200       0.00699           1.01  Resources
-    ##  4 2008-01-03 J400       0.0131            1.01  Resources
-    ##  5 2008-01-04 J200      -0.000828          1.01  Resources
-    ##  6 2008-01-04 J400      -0.00315           1.01  Resources
-    ##  7 2008-01-07 J200      -0.0184            0.988 Resources
-    ##  8 2008-01-07 J400      -0.0153            0.994 Resources
-    ##  9 2008-01-08 J200       0.0151            1.00  Resources
-    ## 10 2008-01-08 J400       0.0213            1.02  Resources
-    ## # … with 6,906 more rows
-    ## 
-    ## $Industrials
-    ## # A tibble: 6,916 × 5
-    ## # Groups:   Portfolio [2]
-    ##    date       Portfolio  Returns cumreturn_Rand Sector     
-    ##    <date>     <chr>        <dbl>          <dbl> <chr>      
-    ##  1 2008-01-02 J200       0.0123           1     Industrials
-    ##  2 2008-01-02 J400       0.0130           1     Industrials
-    ##  3 2008-01-03 J200      -0.0179           0.982 Industrials
-    ##  4 2008-01-03 J400      -0.0194           0.981 Industrials
-    ##  5 2008-01-04 J200      -0.00681          0.975 Industrials
-    ##  6 2008-01-04 J400      -0.00380          0.977 Industrials
-    ##  7 2008-01-07 J200      -0.00122          0.974 Industrials
-    ##  8 2008-01-07 J400      -0.00368          0.973 Industrials
-    ##  9 2008-01-08 J200       0.00680          0.981 Industrials
-    ## 10 2008-01-08 J400       0.00481          0.978 Industrials
-    ## # … with 6,906 more rows
-    ## 
-    ## $Financials
-    ## # A tibble: 6,916 × 5
-    ## # Groups:   Portfolio [2]
-    ##    date       Portfolio  Returns cumreturn_Rand Sector    
-    ##    <date>     <chr>        <dbl>          <dbl> <chr>     
-    ##  1 2008-01-02 J200       0.00808          1     Financials
-    ##  2 2008-01-02 J400       0.0101           1     Financials
-    ##  3 2008-01-03 J200      -0.0189           0.981 Financials
-    ##  4 2008-01-03 J400      -0.0193           0.981 Financials
-    ##  5 2008-01-04 J200      -0.0158           0.966 Financials
-    ##  6 2008-01-04 J400      -0.0132           0.968 Financials
-    ##  7 2008-01-07 J200      -0.00957          0.956 Financials
-    ##  8 2008-01-07 J400      -0.00907          0.959 Financials
-    ##  9 2008-01-08 J200       0.00818          0.964 Financials
-    ## 10 2008-01-08 J400       0.0102           0.969 Financials
-    ## # … with 6,906 more rows
-
-``` r
 # Combine Dataframes
 sectors_cum_return <- rbind(sector_return[[1]], sector_return[[2]], sector_return[[3]]) %>% arrange(date)
 ```
@@ -417,13 +357,13 @@ mc1 = MCHdiag(xts_swix_return, covmat)
 
     ## Test results:  
     ## Q(m) of et: 
-    ## Test and p-value:  13.84812 0.1800328 
+    ## Test and p-value:  13.84817 0.1800305 
     ## Rank-based test: 
-    ## Test and p-value:  9.318195 0.5021954 
+    ## Test and p-value:  9.318122 0.5022021 
     ## Qk(m) of epsilon_t: 
-    ## Test and p-value:  122.735 0.01245606 
+    ## Test and p-value:  122.7352 0.01245581 
     ## Robust Qk(m):  
-    ## Test and p-value:  80.72196 0.7475154
+    ## Test and p-value:  80.72197 0.747515
 
 ``` r
 mc1_ls = MCHdiag(xts_swix_return_loadshed, covmat_ls)
@@ -431,13 +371,13 @@ mc1_ls = MCHdiag(xts_swix_return_loadshed, covmat_ls)
 
     ## Test results:  
     ## Q(m) of et: 
-    ## Test and p-value:  340.7813 0 
+    ## Test and p-value:  340.7814 0 
     ## Rank-based test: 
     ## Test and p-value:  93.51436 1.110223e-15 
     ## Qk(m) of epsilon_t: 
-    ## Test and p-value:  598.9071 0 
+    ## Test and p-value:  598.907 0 
     ## Robust Qk(m):  
-    ## Test and p-value:  137.6813 0.0009137339
+    ## Test and p-value:  137.6813 0.0009137271
 
 ``` r
 mc1_nls = MCHdiag(xts_swix_return_no_loadshed, covmat_nls)
@@ -445,13 +385,13 @@ mc1_nls = MCHdiag(xts_swix_return_no_loadshed, covmat_nls)
 
     ## Test results:  
     ## Q(m) of et: 
-    ## Test and p-value:  1216.348 0 
+    ## Test and p-value:  1216.349 0 
     ## Rank-based test: 
-    ## Test and p-value:  581.7622 0 
+    ## Test and p-value:  581.763 0 
     ## Qk(m) of epsilon_t: 
     ## Test and p-value:  1703.145 0 
     ## Robust Qk(m):  
-    ## Test and p-value:  318.3747 0
+    ## Test and p-value:  318.3751 0
 
 The results have to be pulled out of the data using the following code.
 This will also rename our dynamic conditional correlations.
@@ -485,40 +425,12 @@ dcc.time.var.cor_nls <- renamingdcc(ReturnSeries = xts_swix_return_no_loadshed, 
 First we asses the fit of the DCC model on the data.
 
 ``` r
-library(data.table)
-```
-
-    ## 
-    ## Attaching package: 'data.table'
-
-    ## The following objects are masked from 'package:rmgarch':
-    ## 
-    ##     first, last
-
-    ## The following objects are masked from 'package:xts':
-    ## 
-    ##     first, last
-
-    ## The following objects are masked from 'package:lubridate':
-    ## 
-    ##     hour, isoweek, mday, minute, month, quarter, second, wday, week,
-    ##     yday, year
-
-    ## The following objects are masked from 'package:dplyr':
-    ## 
-    ##     between, first, last
-
-    ## The following object is masked from 'package:purrr':
-    ## 
-    ##     transpose
-
-``` r
 star_fit.dcc <- fit.dcc@mfit$matcoef[rownames(fit.dcc@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE] #%>% data.frame()
 
 # \\label{dccfitfull}
 
 stargazer(star_fit.dcc,
-          type = "latex",
+          type = "text",
           title = "DCC GARCH Model Fit",
           ci = TRUE,
           ci.level = 0.95,
@@ -527,16 +439,30 @@ stargazer(star_fit.dcc,
           align = TRUE)
 ```
 
-% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy
-Institute. E-mail: marek.hlavac at gmail.com % Date and time: Mon, Jan
-23, 2023 - 13:59:32 % Requires LaTeX packages: dcolumn
+# DCC GARCH Model Fit
+
+## Estimate Std. Error t value Pr(\> \| t\| )
+
+\[Resources\].omega 0.00000 0.00001 0.304 0.761  
+\[Resources\].alpha1 0.005 0.033 0.147 0.883  
+\[Resources\].beta1 0.947 0.050 18.749 0  
+\[Industrials\].omega 0.00000 0.00000 1.755 0.079  
+\[Industrials\].alpha1 0.017 0.009 1.822 0.068  
+\[Industrials\].beta1 0.907 0.017 54.781 0  
+\[Financials\].omega 0.00000 0.00000 0.966 0.334  
+\[Financials\].alpha1 0.032 0.022 1.492 0.136  
+\[Financials\].beta1 0.907 0.033 27.601 0  
+\[Joint\]dcca1 0.039 0.005 7.807 0  
+\[Joint\]dccb1 0.949 0.008 123.276 0  
+————————————————————
+
 ``` r
 star_fit.dcc_ls <- fit.dcc_ls@mfit$matcoef[rownames(fit.dcc_ls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE]
 
 # \\label{dccfitls}
 
 stargazer(star_fit.dcc_ls,
-          type = "latex",
+          type = "text",
           title = "Loadshedding DCC GARCH Model Fit",
           ci = TRUE,
           ci.level = 0.95,
@@ -545,16 +471,30 @@ stargazer(star_fit.dcc_ls,
           align = TRUE) 
 ```
 
-% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy
-Institute. E-mail: marek.hlavac at gmail.com % Date and time: Mon, Jan
-23, 2023 - 13:59:32 % Requires LaTeX packages: dcolumn
+# Loadshedding DCC GARCH Model Fit
+
+## Estimate Std. Error t value Pr(\> \| t\| )
+
+\[Resources\].omega 0.00004 0.00003 1.399 0.162  
+\[Resources\].alpha1 0.00000 0.101 0.00000 1.000  
+\[Resources\].beta1 0.791 0.161 4.907 0.00000  
+\[Industrials\].omega 0.00001 0.00000 24.162 0  
+\[Industrials\].alpha1 0.00000 0.028 0.00000 1.000  
+\[Industrials\].beta1 0.825 0.023 35.958 0  
+\[Financials\].omega 0.00003 0.00001 3.121 0.002  
+\[Financials\].alpha1 0.018 0.058 0.306 0.760  
+\[Financials\].beta1 0.672 0.071 9.408 0  
+\[Joint\]dcca1 0.050 0.015 3.413 0.001  
+\[Joint\]dccb1 0.895 0.032 27.574 0  
+————————————————————
+
 ``` r
 star_fit.dcc_nls <- fit.dcc_nls@mfit$matcoef[rownames(fit.dcc_nls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE]
 
 # \\label{dccfitnls}
 
 stargazer(star_fit.dcc_nls,
-          type = "latex",
+          type = "text",
           title = "No Loadshedding DCC GARCH Model Fit",
           ci = TRUE,
           ci.level = 0.95,
@@ -563,9 +503,23 @@ stargazer(star_fit.dcc_nls,
           align = TRUE)
 ```
 
-% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy
-Institute. E-mail: marek.hlavac at gmail.com % Date and time: Mon, Jan
-23, 2023 - 13:59:33 % Requires LaTeX packages: dcolumn
+# No Loadshedding DCC GARCH Model Fit
+
+## Estimate Std. Error t value Pr(\> \| t\| )
+
+\[Resources\].omega 0.00000 0.00000 0.437 0.662  
+\[Resources\].alpha1 0.026 0.021 1.256 0.209  
+\[Resources\].beta1 0.934 0.035 26.758 0  
+\[Industrials\].omega 0.00000 0.00001 0.365 0.715  
+\[Industrials\].alpha1 0.023 0.036 0.641 0.521  
+\[Industrials\].beta1 0.912 0.074 12.253 0  
+\[Financials\].omega 0.00000 0.00001 0.369 0.712  
+\[Financials\].alpha1 0.039 0.051 0.771 0.441  
+\[Financials\].beta1 0.908 0.075 12.101 0  
+\[Joint\]dcca1 0.036 0.005 6.746 0  
+\[Joint\]dccb1 0.954 0.008 120.613 0  
+————————————————————
+
 ## DCC Plots
 
 The plots of the dynamic conditional correlations will be plotted for
@@ -772,7 +726,7 @@ Industrials -\> Resources
 Mean
 </td>
 <td style="text-align:right;">
-0.6098155
+0.6098154
 </td>
 <td style="text-align:right;">
 0.4088567
@@ -786,13 +740,13 @@ Mean
 Std.Dev
 </td>
 <td style="text-align:right;">
-0.1774658
+0.1774655
 </td>
 <td style="text-align:right;">
-0.2042160
+0.2042157
 </td>
 <td style="text-align:right;">
-0.1562136
+0.1562134
 </td>
 </tr>
 <tr>
@@ -800,13 +754,13 @@ Std.Dev
 Min
 </td>
 <td style="text-align:right;">
--0.2038162
+-0.2038155
 </td>
 <td style="text-align:right;">
--0.4322446
+-0.4322444
 </td>
 <td style="text-align:right;">
--0.1155816
+-0.1155815
 </td>
 </tr>
 <tr>
@@ -814,13 +768,13 @@ Min
 Max
 </td>
 <td style="text-align:right;">
-0.8744942
+0.8744940
 </td>
 <td style="text-align:right;">
-0.7944039
+0.7944034
 </td>
 <td style="text-align:right;">
-0.8173090
+0.8173085
 </td>
 </tr>
 </tbody>
@@ -896,10 +850,10 @@ Min
 0.2235938
 </td>
 <td style="text-align:right;">
--0.0118185
+-0.0118184
 </td>
 <td style="text-align:right;">
-0.0996514
+0.0996513
 </td>
 </tr>
 <tr>
@@ -907,7 +861,7 @@ Min
 Max
 </td>
 <td style="text-align:right;">
-0.8128867
+0.8128866
 </td>
 <td style="text-align:right;">
 0.7211935
@@ -972,13 +926,13 @@ Mean
 Std.Dev
 </td>
 <td style="text-align:right;">
-0.1794255
+0.1794254
 </td>
 <td style="text-align:right;">
-0.2089848
+0.2089847
 </td>
 <td style="text-align:right;">
-0.1516229
+0.1516228
 </td>
 </tr>
 <tr>
@@ -986,13 +940,13 @@ Std.Dev
 Min
 </td>
 <td style="text-align:right;">
--0.2036140
+-0.2036136
 </td>
 <td style="text-align:right;">
--0.4319185
+-0.4319181
 </td>
 <td style="text-align:right;">
--0.0908743
+-0.0908740
 </td>
 </tr>
 <tr>
@@ -1000,13 +954,13 @@ Min
 Max
 </td>
 <td style="text-align:right;">
-0.8748959
+0.8748958
 </td>
 <td style="text-align:right;">
-0.8027732
+0.8027730
 </td>
 <td style="text-align:right;">
-0.8242636
+0.8242634
 </td>
 </tr>
 </tbody>

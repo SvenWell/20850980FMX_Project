@@ -15,7 +15,8 @@ This analysis will look at the dynamic conditional correlations of the sector re
 First we will load necessary packages and source our code files. 
 
 ```{r}
-pacman::p_load(modelsummary, gt, knitr, kableExtra, tidyverse, lubridate, tinytex, rmarkdown, crypto2, quantmod, MTS, rmgarch, rugarch, tbl2xts, fmxdat, ggthemes, summarytools, vars, tseries, pander, cowplot, qpcR, tidyquant, stargazer)
+pacman::p_load(modelsummary, gt, knitr, kableExtra, tidyverse, lubridate, tinytex, rmarkdown, crypto2, quantmod, MTS, rmgarch, rugarch, tbl2xts, fmxdat, ggthemes, summarytools, vars, tseries, pander, cowplot, qpcR, tidyquant, stargazer, data.table)
+
 
 list.files('code/', full.names = T, recursive = T) %>% as.list() %>% walk(~source(.))
 ```
@@ -182,8 +183,6 @@ Unfortunately I could not scrape the SWIX portfolio weights for the updated peri
 ```{r}
 T40 <- read_rds("data/T40.rds")
 
-T40 %>% pull(date) %>% max()
-
 sectors <- T40 %>% pull(Sector) %>% unique()
 sector_return <- list()
 for(i in 1:length(sectors)){
@@ -195,7 +194,6 @@ for(i in 1:length(sectors)){
 }
 # Rename tibbles
 names(sector_return) <- sectors
-sector_return
 # Combine Dataframes
 sectors_cum_return <- rbind(sector_return[[1]], sector_return[[2]], sector_return[[3]]) %>% arrange(date)
 ```
@@ -354,13 +352,12 @@ dcc.time.var.cor_nls <- renamingdcc(ReturnSeries = xts_swix_return_no_loadshed, 
 First we asses the fit of the DCC model on the data. 
 
 ```{r, results = 'asis'}
-library(data.table)
 star_fit.dcc <- fit.dcc@mfit$matcoef[rownames(fit.dcc@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE] #%>% data.frame()
 
 # \\label{dccfitfull}
 
 stargazer(star_fit.dcc,
-          type = "latex",
+          type = "text",
           title = "DCC GARCH Model Fit",
           ci = TRUE,
           ci.level = 0.95,
@@ -377,7 +374,7 @@ star_fit.dcc_ls <- fit.dcc_ls@mfit$matcoef[rownames(fit.dcc_ls@mfit$matcoef) %li
 # \\label{dccfitls}
 
 stargazer(star_fit.dcc_ls,
-          type = "latex",
+          type = "text",
           title = "Loadshedding DCC GARCH Model Fit",
           ci = TRUE,
           ci.level = 0.95,
@@ -393,7 +390,7 @@ star_fit.dcc_nls <- fit.dcc_nls@mfit$matcoef[rownames(fit.dcc_nls@mfit$matcoef) 
 # \\label{dccfitnls}
 
 stargazer(star_fit.dcc_nls,
-          type = "latex",
+          type = "text",
           title = "No Loadshedding DCC GARCH Model Fit",
           ci = TRUE,
           ci.level = 0.95,
