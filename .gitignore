@@ -52,3 +52,6 @@ rsconnect/
 */data/
 */data
 /data
+
+*.rds
+.rds

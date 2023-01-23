@@ -8,8 +8,6 @@ output:
     template: Tex/TexDefault.txt
     fig_width: 3.5
     fig_height: 3.5
-  html_document:
-    df_print: paged
     
 Author1: 'Sven Wellmann'
 Ref1: "Stellenbosch University, Stellenbosch, South Africa"
@@ -56,11 +54,30 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width 
 # warning and message = FALSE implies ugly messages and warnings are removed from your pdf.
 # These should be picked up when you execute the command chunks (code sections below) in your rmd, not printed in your paper!
 
-pacman::p_load(modelsummary, gt, knitr, kableExtra, tidyverse, lubridate, tinytex, rmarkdown, crypto2, quantmod, MTS, rmgarch, rugarch, tbl2xts, fmxdat, ggthemes, summarytools, vars, tseries, pander, cowplot, qpcR)
+pacman::p_load(modelsummary, gt, knitr, kableExtra, tidyverse, lubridate, tinytex, rmarkdown, crypto2, quantmod, MTS, rmgarch, rugarch, tbl2xts, fmxdat, ggthemes, summarytools, vars, tseries, pander, cowplot, qpcR, tidyquant, stargazer, data.table)
 
 list.files('code/', full.names = T, recursive = T) %>% as.list() %>% walk(~source(.))
 
 list.files('../code/', full.names = T, recursive = T) %>% as.list() %>% walk(~source(.))
+```
+
+
+```{r include=FALSE}
+T40 <- read_rds("../data/T40.rds")
+
+sectors <- T40 %>% pull(Sector) %>% unique()
+sector_return <- list()
+for(i in 1:length(sectors)){
+    # Loop through sectors and calculate returns and cumulative returns
+    sector_return[[i]] <- portfolio_return_function(T40, sector = sectors[i]) %>% group_by(Portfolio) %>% 
+      mutate(cumreturn_Rand = (cumprod(1 + Returns))) %>% # Start at 1
+      mutate(cumreturn_Rand = cumreturn_Rand/dplyr:::first(cumreturn_Rand)) %>% 
+      mutate(Sector = sectors[i])
+}
+# Rename tibbles
+names(sector_return) <- sectors
+# Combine Dataframes
+sectors_cum_return <- rbind(sector_return[[1]], sector_return[[2]], sector_return[[3]]) %>% arrange(date)
 ```
 
 
@@ -75,24 +92,247 @@ list.files('../code/', full.names = T, recursive = T) %>% as.list() %>% walk(~so
 # Data  {-}
 
 
-```{r Figure1,  warning =  FALSE, fig.align = 'center', fig.cap = "Caption Here \\label{Figure1}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+```{r CumRet,  warning =  FALSE, fig.align = 'center', fig.cap = "Cumulative Returns per Sector for ALSI and SWIX \\label{CumRet}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
+sectors_cum_return_plot <- sectors_cum_return %>% 
+    ggplot() +
+    geom_line(aes(date, cumreturn_Rand, colour = Portfolio), alpha = 0.8) + facet_wrap(~Sector) + fmxdat::fmx_cols() + 
+    labs(y = "Cumulative Returns", x = "") + 
+    fmxdat::theme_fmx(title.size = ggpts(25))
+sectors_cum_return_plot
 
 ```
 
 
+```{r include=FALSE}
+sectors_cum_return <- sectors_cum_return %>% filter(Portfolio == 'J400') # SWIX
 
-```{r Figure2, warning =  FALSE, fig.align = 'center', fig.cap = "Caption Here \\label{Figure2}", fig.height = 3, fig.width = 6, dev = 'png'}
+swix_loadshed <- rbind(
+sectors_cum_return %>% filter(date >= "2014-11-01" & date <= "2015-3-31"),
+sectors_cum_return %>% filter(date >= "2019-02-01" & date <= "2019-3-31"),
+sectors_cum_return %>% filter(date >= "2019-12-01" & date <= "2020-3-31"),
+sectors_cum_return %>% filter(date >= "2021-3-01" & date <= "2021-6-30"),
+sectors_cum_return %>% filter(date >= "2021-9-01" & date <= "2021-11-30"),
+sectors_cum_return %>% filter(date >= "2022-2-01" & date <= "2022-4-30"),
+sectors_cum_return %>% filter(date >= "2022-6-01" & date <= "2022-12-31"))
 
+swix_no_loadshed <- sectors_cum_return %>% filter(!date %in% (swix_loadshed %>% pull(date)))
+
+xts_swix_return <- sectors_cum_return %>% tbl_xts(., cols_to_xts = "Returns", spread_by = "Sector") 
+
+xts_swix_return_loadshed <- swix_loadshed %>% tbl_xts(., cols_to_xts = "Returns", spread_by = "Sector") 
+xts_swix_return_no_loadshed <- swix_no_loadshed %>% tbl_xts(., cols_to_xts = "Returns", spread_by = "Sector") 
+
+fit.dcc = readRDS(file = "../fit.dcc.rds")
+fit.dcc_ls = readRDS(file = "../fit.dcc_ls.rds")
+fit.dcc_nls = readRDS(file = "../fit.dcc_nls.rds")
+
+# Now we can use multf to estimate the dcc model using our
+# dcc.spec:
+fit.dcc = dccfit(spec.dcc, data = xts_swix_return, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf)
+fit.dcc_ls = dccfit(spec.dcc_ls, data = xts_swix_return_loadshed, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf_ls)
+fit.dcc_nls = dccfit(spec.dcc_nls, data = xts_swix_return_no_loadshed, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf_nls)
+
+# And that is our DCC fitted model!
+
+# We can now test the model's fit as follows: Let's use the
+# covariance matrices to test the adequacy of MV model in
+# fitting mean residual processes:
+RcovList <- rcov(fit.dcc)  # This is now a list of the monthly covariances of our DCC model series.
+RcovList_ls <- rcov(fit.dcc_ls)
+RcovList_nls <- rcov(fit.dcc_nls)
+
+covmat = matrix(RcovList, nrow(xts_swix_return), ncol(xts_swix_return) * ncol(xts_swix_return), byrow = TRUE)
+covmat_ls = matrix(RcovList, nrow(xts_swix_return_loadshed), ncol(xts_swix_return_loadshed) * ncol(xts_swix_return_loadshed), byrow = TRUE)
+covmat_nls = matrix(RcovList, nrow(xts_swix_return_no_loadshed), ncol(xts_swix_return_no_loadshed) * ncol(xts_swix_return_no_loadshed), byrow = TRUE)
+
+mc1 = MCHdiag(xts_swix_return, covmat)
+mc1_ls = MCHdiag(xts_swix_return_loadshed, covmat_ls)
+mc1_nls = MCHdiag(xts_swix_return_no_loadshed, covmat_nls)
+
+dcc.time.var.cor <- rcor(fit.dcc)
+dcc.time.var.cor_ls <- rcor(fit.dcc_ls)
+dcc.time.var.cor_nls <- rcor(fit.dcc_nls)
+
+dcc.time.var.cor <- aperm(dcc.time.var.cor, c(3, 2, 1))
+dcc.time.var.cor_ls <- aperm(dcc.time.var.cor_ls, c(3, 2, 1))
+dcc.time.var.cor_nls <- aperm(dcc.time.var.cor_nls, c(3, 2, 1))
+
+dim(dcc.time.var.cor) <- c(nrow(dcc.time.var.cor), ncol(dcc.time.var.cor)^2)
+dim(dcc.time.var.cor_ls) <- c(nrow(dcc.time.var.cor_ls), ncol(dcc.time.var.cor_ls)^2)
+dim(dcc.time.var.cor_nls) <- c(nrow(dcc.time.var.cor_nls), ncol(dcc.time.var.cor_nls)^2)
+
+dcc.time.var.cor <- renamingdcc(ReturnSeries = xts_swix_return, DCC.TV.Cor = dcc.time.var.cor)
+dcc.time.var.cor_ls <- renamingdcc(ReturnSeries = xts_swix_return_loadshed, DCC.TV.Cor = dcc.time.var.cor_ls)
+dcc.time.var.cor_nls <- renamingdcc(ReturnSeries = xts_swix_return_no_loadshed, DCC.TV.Cor = dcc.time.var.cor_nls)
+```
+
+
+
+```{r ALSI, warning =  FALSE, fig.align = 'center', fig.cap = "ALSI Weight Contribution \\label{ALSI}", fig.height = 3, fig.width = 6, dev = 'png'}
+weights_plot(T40, "ALSI")
+```
+
+
+```{r SWIX, warning =  FALSE, fig.align = 'center', fig.cap = "SWIX Weight Contribution \\label{SWIX}", fig.height = 3, fig.width = 6, dev = 'png'}
+weights_plot(T40, "SWIX")
+```
+
+
+```{r LogRet,  warning =  FALSE, fig.align = 'center', fig.cap = "Log Returns per Sector for the SWIX \\label{LogRet}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+log_returns_plot <- sectors_cum_return %>% mutate(Sector = factor(Sector, levels = c("Financials",  "Industrials", "Resources"))) %>% 
+  ggplot() + geom_line(aes(x = date, y = Returns, colour = Sector, alpha = 1)) + 
+facet_wrap(~Sector, scales = "free_y", nrow = 3) + 
+guides(alpha = "none") + 
+fmxdat::theme_fmx() +
+labs(x = "", y = "", subtitle = " ") +
+theme(legend.position = "none") +
+scale_color_hue(l = 20) + 
+scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
+theme(axis.text = element_text(size = 7))
+
+log_returns_plot
 
 ```
 
 
-# Splitting a page
+```{r, results = 'asis'}
+star_fit.dcc <- fit.dcc@mfit$matcoef[rownames(fit.dcc@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE] #%>% data.frame()
+
+# \\label{dccfitfull}
+
+stargazer(star_fit.dcc,
+          type = "text",
+          title = "DCC GARCH Model Fit",
+          ci = TRUE,
+          ci.level = 0.95,
+          p.auto = TRUE,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          align = TRUE)
+
+```
+
+
+```{r, results = 'asis' }
+star_fit.dcc_ls <- fit.dcc_ls@mfit$matcoef[rownames(fit.dcc_ls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE]
+
+# \\label{dccfitls}
+
+stargazer(star_fit.dcc_ls,
+          type = "text",
+          title = "Loadshedding DCC GARCH Model Fit",
+          ci = TRUE,
+          ci.level = 0.95,
+          p.auto = TRUE,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          align = TRUE) 
+```
+
+
+```{r, results = 'asis'}
+star_fit.dcc_nls <- fit.dcc_nls@mfit$matcoef[rownames(fit.dcc_nls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE]
+
+# \\label{dccfitnls}
+
+stargazer(star_fit.dcc_nls,
+          type = "text",
+          title = "No Loadshedding DCC GARCH Model Fit",
+          ci = TRUE,
+          ci.level = 0.95,
+          p.auto = TRUE,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          align = TRUE)
+```
+
+
+```{r DCCfullr,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Resources \\label{DCCfullr}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+dcc.time.var.cor_r_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Resources_", Pairs), !grepl("_Resources", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  #ggtitle("Dynamic Conditional Correlations: Resources") + 
+  scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
+  annotate("text", 
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2022-02-01")), 
+           y = -0.3, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5"),
+           angle = 90) +
+  xlab("") +
+  geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
+  geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
+  geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+
+dcc.time.var.cor_r_plot
+
+```
+
+
+```{r DCCfullf,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Financials \\label{DCCfullf}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+dcc.time.var.cor_f_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Financials_", Pairs), !grepl("_Financials", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  ggtitle("Dynamic Conditional Correlations: Financials") +
+  scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
+  annotate("text", 
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2022-02-01")), 
+           y = -0.3, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5"),
+           angle = 90) +
+  xlab("") +
+  geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
+  geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
+  geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+
+dcc.time.var.cor_f_plot
+
+```
+
+
+```{r DCCfulli,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Industrials \\label{DCCfulli}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+dcc.time.var.cor_i_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Industrials_", Pairs), !grepl("_Industrials", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  ggtitle("Dynamic Conditional Correlations: Industrials") +
+  scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
+  annotate("text", 
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2022-02-01")), 
+           y = -0.1, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5"),
+           angle = 90) +
+  xlab("") +
+  geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
+  geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
+  geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+
+dcc.time.var.cor_i_plot
+
+```
+
+
+```{r include=FALSE}
+dcc.time.var.cor_ls <- dcc.time.var.cor_ls %>% mutate(Period = case_when(date >= "2014-11-01" & date <= "2015-3-31" ~ "Period 1",
+                              date >= "2019-02-01" & date <= "2019-3-31" ~ "Period 2",
+                              date >= "2019-12-01" & date <= "2020-3-31" ~ "Period 3",
+                              date >= "2021-3-01" & date <= "2021-6-30" ~ "Period 4",
+                              date >= "2021-9-01" & date <= "2021-11-30" ~ "Period 5",
+                              date >= "2022-2-01" & date <= "2022-4-30" ~ "Period 6"))
+```
 
 
 
-#  Methodology \label{Meth}
+
+
+
+# Methodology \label{Meth}
 
 
 

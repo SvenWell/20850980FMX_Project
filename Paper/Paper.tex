@@ -248,8 +248,130 @@ Abstract
 \section*{Data}\label{data}}
 \addcontentsline{toc}{section}{Data}
 
-\hypertarget{splitting-a-page}{%
-\section{Splitting a page}\label{splitting-a-page}}
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/CumRet-1} 
+
+}
+
+\caption{Cumulative Returns per Sector for ALSI and SWIX \label{CumRet}}\label{fig:CumRet}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/ALSI-1} 
+
+}
+
+\caption{ALSI Weight Contribution \label{ALSI}}\label{fig:ALSI}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/SWIX-1} 
+
+}
+
+\caption{SWIX Weight Contribution \label{SWIX}}\label{fig:SWIX}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/LogRet-1} 
+
+}
+
+\caption{Log Returns per Sector for the SWIX \label{LogRet}}\label{fig:LogRet}
+\end{figure}
+
+\hypertarget{dcc-garch-model-fit}{%
+\section{DCC GARCH Model Fit}\label{dcc-garch-model-fit}}
+
+\hypertarget{estimate-std.-error-t-value-pr-t}{%
+\subsection{Estimate Std. Error t value Pr(\textgreater{} \textbar{}
+t\textbar{} )}\label{estimate-std.-error-t-value-pr-t}}
+
+{[}Resources{]}.omega 0.00000 0.00001 0.304 0.761\\
+{[}Resources{]}.alpha1 0.005 0.033 0.147 0.883\\
+{[}Resources{]}.beta1 0.947 0.050 18.750 0\\
+{[}Industrials{]}.omega 0.00000 0.00000 1.755 0.079\\
+{[}Industrials{]}.alpha1 0.017 0.009 1.822 0.068\\
+{[}Industrials{]}.beta1 0.907 0.017 54.781 0\\
+{[}Financials{]}.omega 0.00000 0.00000 0.966 0.334\\
+{[}Financials{]}.alpha1 0.032 0.022 1.492 0.136\\
+{[}Financials{]}.beta1 0.907 0.033 27.601 0\\
+{[}Joint{]}dcca1 0.039 0.005 7.807 0\\
+{[}Joint{]}dccb1 0.949 0.008 123.286 0\\
+------------------------------------------------------------
+
+\hypertarget{loadshedding-dcc-garch-model-fit}{%
+\section{Loadshedding DCC GARCH Model
+Fit}\label{loadshedding-dcc-garch-model-fit}}
+
+\hypertarget{estimate-std.-error-t-value-pr-t-1}{%
+\subsection{Estimate Std. Error t value Pr(\textgreater{} \textbar{}
+t\textbar{} )}\label{estimate-std.-error-t-value-pr-t-1}}
+
+{[}Resources{]}.omega 0.00004 0.00003 1.399 0.162\\
+{[}Resources{]}.alpha1 0.00000 0.101 0.00000 1.000\\
+{[}Resources{]}.beta1 0.791 0.161 4.907 0.00000\\
+{[}Industrials{]}.omega 0.00001 0.00000 24.162 0\\
+{[}Industrials{]}.alpha1 0.00000 0.028 0.00000 1.000\\
+{[}Industrials{]}.beta1 0.825 0.023 35.958 0\\
+{[}Financials{]}.omega 0.00003 0.00001 3.121 0.002\\
+{[}Financials{]}.alpha1 0.018 0.058 0.306 0.760\\
+{[}Financials{]}.beta1 0.672 0.071 9.408 0\\
+{[}Joint{]}dcca1 0.050 0.015 3.414 0.001\\
+{[}Joint{]}dccb1 0.895 0.032 27.579 0\\
+------------------------------------------------------------
+
+\hypertarget{no-loadshedding-dcc-garch-model-fit}{%
+\section{No Loadshedding DCC GARCH Model
+Fit}\label{no-loadshedding-dcc-garch-model-fit}}
+
+\hypertarget{estimate-std.-error-t-value-pr-t-2}{%
+\subsection{Estimate Std. Error t value Pr(\textgreater{} \textbar{}
+t\textbar{} )}\label{estimate-std.-error-t-value-pr-t-2}}
+
+{[}Resources{]}.omega 0.00000 0.00000 0.437 0.662\\
+{[}Resources{]}.alpha1 0.026 0.021 1.256 0.209\\
+{[}Resources{]}.beta1 0.934 0.035 26.758 0\\
+{[}Industrials{]}.omega 0.00000 0.00001 0.365 0.715\\
+{[}Industrials{]}.alpha1 0.023 0.036 0.641 0.521\\
+{[}Industrials{]}.beta1 0.912 0.074 12.253 0\\
+{[}Financials{]}.omega 0.00000 0.00001 0.369 0.712\\
+{[}Financials{]}.alpha1 0.039 0.051 0.771 0.441\\
+{[}Financials{]}.beta1 0.908 0.075 12.101 0\\
+{[}Joint{]}dcca1 0.036 0.005 6.747 0\\
+{[}Joint{]}dccb1 0.954 0.008 120.623 0\\
+------------------------------------------------------------
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCCfullr-1} 
+
+}
+
+\caption{Dynamic Conditional Correlations: Resources \label{DCCfullr}}\label{fig:DCCfullr}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCCfullf-1} 
+
+}
+
+\caption{Dynamic Conditional Correlations: Financials \label{DCCfullf}}\label{fig:DCCfullf}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCCfulli-1} 
+
+}
+
+\caption{Dynamic Conditional Correlations: Industrials \label{DCCfulli}}\label{fig:DCCfulli}
+\end{figure}
 
 \hypertarget{methodology}{%
 \section{\texorpdfstring{Methodology
