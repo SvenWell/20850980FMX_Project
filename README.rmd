@@ -305,9 +305,19 @@ multf_nls = multifit(multi_univ_garch_spec_nls, xts_swix_return_no_loadshed, clu
 
 # Now we can use multf to estimate the dcc model using our
 # dcc.spec:
-fit.dcc = dccfit(spec.dcc, data = xts_swix_return, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf)
-fit.dcc_ls = dccfit(spec.dcc_ls, data = xts_swix_return_loadshed, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf_ls)
-fit.dcc_nls = dccfit(spec.dcc_nls, data = xts_swix_return_no_loadshed, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf_nls)
+#fit.dcc = dccfit(spec.dcc, data = xts_swix_return, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf)
+#fit.dcc_ls = dccfit(spec.dcc_ls, data = xts_swix_return_loadshed, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf_ls)
+#fit.dcc_nls = dccfit(spec.dcc_nls, data = xts_swix_return_no_loadshed, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf_nls)
+
+#saveRDS(fit.dcc, file = "fit.dcc.rds")
+#saveRDS(fit.dcc_ls, file = "fit.dcc_ls.rds")
+#saveRDS(fit.dcc_nls, file = "fit.dcc_nls.rds")
+
+# I have saved and read in the files to help save knitting time
+
+fit.dcc = readRDS(file = "fit.dcc.rds")
+fit.dcc_ls = readRDS(file = "fit.dcc_ls.rds")
+fit.dcc_nls = readRDS(file = "fit.dcc_nls.rds")
 
 # And that is our DCC fitted model!
 

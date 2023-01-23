@@ -62,6 +62,12 @@ list.files('../code/', full.names = T, recursive = T) %>% as.list() %>% walk(~so
 ```
 
 
+```{r eval=FALSE, include=FALSE}
+# Alsi_returns <- read_rds("/Users/svenwellmann/Downloads/Alsi_Returns.rds")
+# Alsi_returns %>% pull(date) %>% max
+```
+
+
 ```{r include=FALSE}
 T40 <- read_rds("../data/T40.rds")
 
@@ -92,7 +98,8 @@ sectors_cum_return <- rbind(sector_return[[1]], sector_return[[2]], sector_retur
 # Data  {-}
 
 
-```{r CumRet,  warning =  FALSE, fig.align = 'center', fig.cap = "Cumulative Returns per Sector for ALSI and SWIX \\label{CumRet}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+```{r CumRet,  warning =  FALSE, fig.align = 'center', fig.cap = "Cumulative Returns per Sector for ALSI and SWIX \\label{CumRet}", fig.ext = 'png', fig.height = 4, fig.width = 7}
 
 sectors_cum_return_plot <- sectors_cum_return %>% 
     ggplot() +
@@ -127,17 +134,6 @@ fit.dcc = readRDS(file = "../fit.dcc.rds")
 fit.dcc_ls = readRDS(file = "../fit.dcc_ls.rds")
 fit.dcc_nls = readRDS(file = "../fit.dcc_nls.rds")
 
-# Now we can use multf to estimate the dcc model using our
-# dcc.spec:
-fit.dcc = dccfit(spec.dcc, data = xts_swix_return, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf)
-fit.dcc_ls = dccfit(spec.dcc_ls, data = xts_swix_return_loadshed, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf_ls)
-fit.dcc_nls = dccfit(spec.dcc_nls, data = xts_swix_return_no_loadshed, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf_nls)
-
-# And that is our DCC fitted model!
-
-# We can now test the model's fit as follows: Let's use the
-# covariance matrices to test the adequacy of MV model in
-# fitting mean residual processes:
 RcovList <- rcov(fit.dcc)  # This is now a list of the monthly covariances of our DCC model series.
 RcovList_ls <- rcov(fit.dcc_ls)
 RcovList_nls <- rcov(fit.dcc_nls)
@@ -169,17 +165,17 @@ dcc.time.var.cor_nls <- renamingdcc(ReturnSeries = xts_swix_return_no_loadshed, 
 
 
 
-```{r ALSI, warning =  FALSE, fig.align = 'center', fig.cap = "ALSI Weight Contribution \\label{ALSI}", fig.height = 3, fig.width = 6, dev = 'png'}
+```{r ALSI, warning =  FALSE, fig.align = 'center', fig.cap = "ALSI Weight Contribution \\label{ALSI}", fig.height = 4, fig.width = 7, dev = 'png'}
 weights_plot(T40, "ALSI")
 ```
 
 
-```{r SWIX, warning =  FALSE, fig.align = 'center', fig.cap = "SWIX Weight Contribution \\label{SWIX}", fig.height = 3, fig.width = 6, dev = 'png'}
+```{r SWIX, warning =  FALSE, fig.align = 'center', fig.cap = "SWIX Weight Contribution \\label{SWIX}", fig.height = 4, fig.width = 7, dev = 'png'}
 weights_plot(T40, "SWIX")
 ```
 
 
-```{r LogRet,  warning =  FALSE, fig.align = 'center', fig.cap = "Log Returns per Sector for the SWIX \\label{LogRet}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+```{r LogRet,  warning =  FALSE, fig.align = 'center', fig.cap = "Log Returns per Sector for the SWIX \\label{LogRet}", fig.ext = 'png', fig.height = 4, fig.width = 7}
 
 log_returns_plot <- sectors_cum_return %>% mutate(Sector = factor(Sector, levels = c("Financials",  "Industrials", "Resources"))) %>% 
   ggplot() + geom_line(aes(x = date, y = Returns, colour = Sector, alpha = 1)) + 
@@ -246,7 +242,7 @@ stargazer(star_fit.dcc_nls,
 ```
 
 
-```{r DCCfullr,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Resources \\label{DCCfullr}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+```{r DCCfullr,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Resources \\label{DCCfullr}", fig.ext = 'png', fig.height = 4, fig.width = 7}
 
 dcc.time.var.cor_r_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Resources_", Pairs), !grepl("_Resources", Pairs))) + 
   geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
@@ -270,7 +266,7 @@ dcc.time.var.cor_r_plot
 ```
 
 
-```{r DCCfullf,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Financials \\label{DCCfullf}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+```{r DCCfullf,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Financials \\label{DCCfullf}", fig.ext = 'png', fig.height = 4, fig.width = 7}
 
 dcc.time.var.cor_f_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Financials_", Pairs), !grepl("_Financials", Pairs))) + 
   geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
@@ -294,7 +290,7 @@ dcc.time.var.cor_f_plot
 ```
 
 
-```{r DCCfulli,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Industrials \\label{DCCfulli}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+```{r DCCfulli,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Industrials \\label{DCCfulli}", fig.ext = 'png', fig.height = 4, fig.width = 7}
 
 dcc.time.var.cor_i_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Industrials_", Pairs), !grepl("_Industrials", Pairs))) + 
   geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
