@@ -1,0 +1,126 @@
+---
+title: "The Impact of Loadshedding on SWIX sectors using DCC-GARCH models"
+documentclass: "elsarticle"
+Thesis_FP: FALSE
+output:
+  pdf_document:
+    keep_tex: TRUE
+    template: Tex/TexDefault.txt
+    fig_width: 3.5
+    fig_height: 3.5
+  html_document:
+    df_print: paged
+    
+Author1: 'Sven Wellmann'
+Ref1: "Stellenbosch University, Stellenbosch, South Africa"
+Email1: '20850980\@sun.ac.za'
+
+BottomRFooter: "\\footnotesize Page \\thepage"
+addtoprule: TRUE
+addfootrule: TRUE
+
+margin: 2.3
+bottom: 2
+top: 2.5
+HardSet_layout: TRUE
+
+linenumbers: FALSE
+
+bibliography: Tex/ref.bib
+csl: Tex/harvard-stellenbosch-university.csl
+
+RemovePreprintSubmittedTo: TRUE
+Journal: "Journal of Finance"
+
+toc: FALSE # Table of Contents
+
+numbersections: TRUE
+
+fontsize: 11pt
+linestretch: 1.2
+link-citations: TRUE
+
+AddTitle: TRUE
+
+abstract: |
+  Abstract
+---
+
+<!-- First: Set your default preferences for chunk options: -->
+
+<!-- If you want a chunk's code to be printed, set echo = TRUE. message = FALSE stops R printing ugly package loading details in your final paper too. I also suggest setting warning = FALSE and checking for warnings in R, else you might find ugly warnings in your paper. -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 6, fig.height = 5, fig.pos="H", fig.pos = 'H')
+# Note: Include = FALSE implies the code is executed, but not printed in your pdf.
+# warning and message = FALSE implies ugly messages and warnings are removed from your pdf.
+# These should be picked up when you execute the command chunks (code sections below) in your rmd, not printed in your paper!
+
+pacman::p_load(modelsummary, gt, knitr, kableExtra, tidyverse, lubridate, tinytex, rmarkdown, crypto2, quantmod, MTS, rmgarch, rugarch, tbl2xts, fmxdat, ggthemes, summarytools, vars, tseries, pander, cowplot, qpcR)
+
+list.files('code/', full.names = T, recursive = T) %>% as.list() %>% walk(~source(.))
+
+list.files('../code/', full.names = T, recursive = T) %>% as.list() %>% walk(~source(.))
+```
+
+
+<!-- ############################## -->
+<!-- # Start Writing here: -->
+<!-- ############################## -->
+
+# Introduction \label{Introduction}
+
+
+
+# Data  {-}
+
+
+```{r Figure1,  warning =  FALSE, fig.align = 'center', fig.cap = "Caption Here \\label{Figure1}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+
+```
+
+
+
+```{r Figure2, warning =  FALSE, fig.align = 'center', fig.cap = "Caption Here \\label{Figure2}", fig.height = 3, fig.width = 6, dev = 'png'}
+
+
+```
+
+
+# Splitting a page
+
+
+
+#  Methodology \label{Meth}
+
+
+
+# Results
+
+
+\hfill
+
+
+# Conclusion
+
+
+<!-- Make title of bibliography here: -->
+<!-- \newpage -->
+
+\newpage
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
+
+
+# Appendix {.unnumbered}
+
+## Appendix A {.unnumbered}
+
+Some appendix information here
+
+## Appendix B {.unnumbered}
+
