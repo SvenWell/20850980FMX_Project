@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2023.1.29)  30 JAN 2023 01:02
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2023.1.29)  30 JAN 2023 09:22
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -760,61 +760,61 @@ LaTeX Warning: Reference `table:univar' on page 8 undefined on input line 592.
 <Paper_files/figure-latex/DCCfullr-1.png, id=211, 433.62pt x 216.81pt>
 File: Paper_files/figure-latex/DCCfullr-1.png Graphic file (type png)
 <use Paper_files/figure-latex/DCCfullr-1.png>
-Package pdftex.def Info: Paper_files/figure-latex/DCCfullr-1.png  used on input line 776.
+Package pdftex.def Info: Paper_files/figure-latex/DCCfullr-1.png  used on input line 770.
 (pdftex.def)             Requested size: 433.61894pt x 216.80946pt.
 <Paper_files/figure-latex/DCCfullf-1.png, id=212, 433.62pt x 216.81pt>
 File: Paper_files/figure-latex/DCCfullf-1.png Graphic file (type png)
 <use Paper_files/figure-latex/DCCfullf-1.png>
-Package pdftex.def Info: Paper_files/figure-latex/DCCfullf-1.png  used on input line 785.
+Package pdftex.def Info: Paper_files/figure-latex/DCCfullf-1.png  used on input line 779.
 (pdftex.def)             Requested size: 433.61894pt x 216.80946pt.
 [11 <./Paper_files/figure-latex/DCCfullr-1.png>]
 <Paper_files/figure-latex/DCCfulli-1.png, id=228, 433.62pt x 216.81pt>
 File: Paper_files/figure-latex/DCCfulli-1.png Graphic file (type png)
 <use Paper_files/figure-latex/DCCfulli-1.png>
-Package pdftex.def Info: Paper_files/figure-latex/DCCfulli-1.png  used on input line 794.
+Package pdftex.def Info: Paper_files/figure-latex/DCCfulli-1.png  used on input line 788.
 (pdftex.def)             Requested size: 433.61894pt x 216.80946pt.
 <Paper_files/figure-latex/DCCfullp-1.png, id=229, 433.62pt x 216.81pt>
 File: Paper_files/figure-latex/DCCfullp-1.png Graphic file (type png)
 <use Paper_files/figure-latex/DCCfullp-1.png>
-Package pdftex.def Info: Paper_files/figure-latex/DCCfullp-1.png  used on input line 803.
+Package pdftex.def Info: Paper_files/figure-latex/DCCfullp-1.png  used on input line 797.
 (pdftex.def)             Requested size: 433.61894pt x 216.80946pt.
 [12 <./Paper_files/figure-latex/DCCfullf-1.png> <./Paper_files/figure-latex/DCCfulli-1.png>] [13 <./Paper_files/figure-latex/DCCfullp-1.png>]
 <Paper_files/figure-latex/DCClsr-1.png, id=270, 433.62pt x 216.81pt>
 File: Paper_files/figure-latex/DCClsr-1.png Graphic file (type png)
 <use Paper_files/figure-latex/DCClsr-1.png>
-Package pdftex.def Info: Paper_files/figure-latex/DCClsr-1.png  used on input line 883.
+Package pdftex.def Info: Paper_files/figure-latex/DCClsr-1.png  used on input line 877.
 (pdftex.def)             Requested size: 433.61894pt x 216.80946pt.
 <Paper_files/figure-latex/DCClsi-1.png, id=271, 433.62pt x 216.81pt>
 File: Paper_files/figure-latex/DCClsi-1.png Graphic file (type png)
 <use Paper_files/figure-latex/DCClsi-1.png>
-Package pdftex.def Info: Paper_files/figure-latex/DCClsi-1.png  used on input line 892.
+Package pdftex.def Info: Paper_files/figure-latex/DCClsi-1.png  used on input line 886.
 (pdftex.def)             Requested size: 433.61894pt x 216.80946pt.
 [14 <./Paper_files/figure-latex/DCClsr-1.png>]
 <Paper_files/figure-latex/DCClsf-1.png, id=285, 433.62pt x 216.81pt>
 File: Paper_files/figure-latex/DCClsf-1.png Graphic file (type png)
 <use Paper_files/figure-latex/DCClsf-1.png>
-Package pdftex.def Info: Paper_files/figure-latex/DCClsf-1.png  used on input line 901.
+Package pdftex.def Info: Paper_files/figure-latex/DCClsf-1.png  used on input line 895.
 (pdftex.def)             Requested size: 433.61894pt x 216.80946pt.
 <Paper_files/figure-latex/DCClsp-1.png, id=286, 433.62pt x 216.81pt>
 File: Paper_files/figure-latex/DCClsp-1.png Graphic file (type png)
 <use Paper_files/figure-latex/DCClsp-1.png>
-Package pdftex.def Info: Paper_files/figure-latex/DCClsp-1.png  used on input line 910.
+Package pdftex.def Info: Paper_files/figure-latex/DCClsp-1.png  used on input line 904.
 (pdftex.def)             Requested size: 433.61894pt x 216.80946pt.
 [15 <./Paper_files/figure-latex/DCClsi-1.png> <./Paper_files/figure-latex/DCClsf-1.png>]
 
-LaTeX Warning: Reference `table:descdcc' on page 16 undefined on input line 946.
+LaTeX Warning: Reference `table:descdcc' on page 16 undefined on input line 940.
 
 
-LaTeX Warning: Reference `fig:btcdcc' on page 16 undefined on input line 947.
+LaTeX Warning: Reference `fig:dcc' on page 16 undefined on input line 941.
 
 
-LaTeX Warning: Reference `unconcorr' on page 16 undefined on input line 949.
+LaTeX Warning: Reference `unconcorr' on page 16 undefined on input line 943.
 
 
-LaTeX Warning: Reference `volclust' on page 16 undefined on input line 953.
+LaTeX Warning: Reference `volclust' on page 16 undefined on input line 947.
 
 
-LaTeX Warning: Reference `fig:btcdcc' on page 16 undefined on input line 956.
+LaTeX Warning: Reference `fig:btcdcc' on page 16 undefined on input line 950.
 
 [16 <./Paper_files/figure-latex/DCClsp-1.png>] [17] [18]
 No file Paper.bbl.
@@ -826,15 +826,15 @@ Package rerunfilecheck Info: File `Paper.out' has not changed.
 (rerunfilecheck)             Checksum: 27D2D31C0034C07CED7A2D5576CDF38E;2290.
  ) 
 Here is how much of TeX's memory you used:
- 18277 strings out of 478025
- 339276 string characters out of 5838991
+ 18278 strings out of 478025
+ 339285 string characters out of 5838991
  1870305 words of memory out of 5000000
- 38017 multiletter control sequences out of 15000+600000
+ 38018 multiletter control sequences out of 15000+600000
  567026 words of font info for 71 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  75i,14n,76p,328b,900s stack positions out of 10000i,1000n,20000p,200000b,200000s
 {/Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{/Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{/Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc}{/Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}{/Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}</Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmex10.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi8.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr6.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr8.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr9.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri7.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri9.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy6.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy8.pfb></Users/svenwellmann/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt9.pfb>
-Output written on Paper.pdf (19 pages, 641741 bytes).
+Output written on Paper.pdf (19 pages, 640651 bytes).
 PDF statistics:
  433 PDF objects out of 1000 (max. 8388607)
  354 compressed objects within 4 object streams

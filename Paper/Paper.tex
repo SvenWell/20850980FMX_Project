@@ -709,21 +709,15 @@ Resources & 0.0003 & 0.0066 & 0.0000 & 0.0169 & 0.9444 & 0.0626 & 0.9554 & 10.34
 \hypertarget{results}{%
 \section{Results}\label{results}}
 
-In order to understand the dynamics within the cryptocurrency market,
-the results of both the Go-GARCH and DCC models are analyzed. The
-Go-GARCH model considers the influence of past innovations of each time
-series on its own conditional variance, as well as the effect of past
-innovations of other time series on the variance of the target time
-series. This model captures the direct impact of one time series on the
-variance of another. On the other hand, the DCC model separates the
-variance and the correlation structure into two distinct components: the
-GARCH component, which models the variance of each time series, and the
+In order to understand the dynamics of the different sectors of the ALSI
+the DCC models are analysed. The DCC model separates the variance and
+the correlation structure into two distinct components: the GARCH
+component, which models the variance of each time series, and the
 dynamic conditional correlation component, which models the correlations
 between the time series. This allows the DCC model to capture both the
 direct and indirect effects of one time series on the variance of
 another time series. Additionally, the DCC model allows for the dynamic
-correlations between time series to vary over time, while the Go-GARCH
-model assumes that the correlations are constant.
+correlations between time series to vary over time.
 
 \hypertarget{whole-period}{%
 \subsection{Whole Period}\label{whole-period}}
@@ -942,31 +936,19 @@ Resources -> Property & 0.2957 & 0.0824 & 0.0803 & 0.5228\\
 \end{table}
 
 The results from the Dynamic Conditional Correlations (DCC) model show
-that the volatility of cryptocurrencies exhibits strong co-movements, as
+that the volatility of sector returns exhibit strong co-movements, as
 observed in the Table \ref{table:descdcc} and illustrated in the Figure
-\ref{fig:btcdcc}. The DCC model, which extracts the underlying process
-and removes noise from the data, reveals lower correlations compared to
-the static correlations presented in section \ref{unconcorr}. The
-minimum and maximum values of the correlations tend to occur during
-times of endogenous and exogenous shocks to the cryptocurrency market.
-This suggests that the cryptocurrency market is highly interconnected
-and exhibits volatility clustering, as found in section \ref{volclust}.
+\ref{fig:dcc}. The DCC model, which extracts the underlying process and
+removes noise from the data, reveals lower correlations compared to the
+static correlations presented in section \ref{unconcorr}. The minimum
+and maximum values of the correlations tend to occur during times of
+endogenous and exogenous shocks to the market. This suggests that the
+market is highly interconnected and exhibits volatility clustering, as
+found in section \ref{volclust}.
 
-When examining the dynamic correlations between Bitcoin and the
-stablecoins Dai and Tether in Figure \ref{fig:btcdcc}, it is clear that
-the co-movements between these assets are relatively low. This
-highlights the utility of stablecoins in reducing volatility in the
-cryptocurrency market, as they offer an on-chain source of a safe-haven
-asset. This allows investors to remain in the cryptocurrency market
-while avoiding significant volatility. However, the graph also shows
-that there are periods of increased co-movements between stablecoins and
-other cryptocurrencies, particularly during times of high volatility
-caused by exogenous or endogenous shocks. This suggests that
-stablecoins, while mostly uncorrelated with the rest of the
-cryptocurrency market, do exhibit some degree of similarity in terms of
-volatility. This could be due to the fact that stablecoins are seen as
-safe-haven assets and therefore tend to experience similar movements in
-times of risk-on and risk-off sentiment.
+When examining the dynamic correlations between sectors in Figure
+\ref{fig:btcdcc}, it is clear that the co-movements between these assets
+are relatively low.
 
 \hfill
 
