@@ -183,7 +183,7 @@
 
 \begin{frontmatter}  %
 
-\title{The Impact of Loadshedding on SWIX sectors using DCC-GARCH
+\title{The Impact of Loadshedding on SWIX Sectors using DCC-GARCH
 models}
 
 % Set to FALSE if wanting to remove title (for submission)
@@ -244,9 +244,30 @@ Abstract
 \section{\texorpdfstring{Introduction
 \label{Introduction}}{Introduction }}\label{introduction}}
 
+\hypertarget{literature-review}{%
+\section{Literature Review}\label{literature-review}}
+
 \hypertarget{data}{%
-\section*{Data}\label{data}}
-\addcontentsline{toc}{section}{Data}
+\section{\texorpdfstring{Data \label{Data}}{Data }}\label{data}}
+
+The aim of this project is to construct time-varying conditional
+correlations between different sectors of the ALSI. These co-movements
+between sectors are then analysed over a stratified period where South
+Africa was affected by load-shedding. This study utilises a series of
+daily returns and weights of stocks in the ALSI, which are then filtered
+into either the Industrial, Financial, Resource or Property sector.
+Sector returns are calculated on a daily level and then the entire data
+set is subset into months than South Africa experienced load-shedding
+and months where it did not. The sample period of the data is from 1
+January 2014 until 31 October 2022.
+
+The sector returns are plotted in Figure \ref{CumRet} where it is
+visible that the sectors show characteristics of co-movement, especially
+during market shocks. This is evident with the onset of COVID-19 in
+March of 2020 where all sectors demonstrate a significant drawback in
+cumulative returns. Since this downturn in 2020, the Resource sector has
+grown significantly while Property has not been able to recover to
+pre-pandemic levels.
 
 \begin{figure}[H]
 
@@ -257,23 +278,87 @@ Abstract
 \caption{Cumulative Returns per Sector for ALSI and SWIX \label{CumRet}}\label{fig:CumRet}
 \end{figure}
 
-\begin{figure}[H]
+\hypertarget{summary-statistics}{%
+\subsection{Summary Statistics}\label{summary-statistics}}
 
-{\centering \includegraphics{Paper_files/figure-latex/ALSI-1} 
+Summary statistics for the series of daily sector returns are shown in
+Table \ref{table1}. Resources show the largest average daily return
+(\(\mu = 0.0005\)) for the sample period, while Property shows the
+lowest average daily return (\(\mu = 0\)). The largest standard
+deviation belongs to the Resource sector, indicating that it has the
+largest volatility from a historical and static perspective. The
+Property sector has both the largest daily drawdown and the largest
+daily recovery over the sample period, at -19.35\% and 15.49\%. All of
+the sectors show negatively skewed tails, indicating that large negative
+returns are more likely than large positive returns for this sample
+period. Property exhibits a high degree of kurtosis, having its
+distribution concentrated around the mean. The Jarque-Bera test is used
+to assess whether the daily returns follow a normal distribution. The
+significance stars in Table \ref{table1} below indicate that the null
+hypothesis of normality in the sampled returns is rejected for all
+sectors at a 1\% significance level.
 
-}
+\begin{table}
 
-\caption{ALSI Weight Contribution \label{ALSI}}\label{fig:ALSI}
-\end{figure}
+\caption{\label{tab:table1}Summary Statistics and Test Scores for Sectors \label{table1}}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{l|l|l|l|l}
+\hline
+  & Financials & Industrials & Property & Resources\\
+\hline
+Mean & 0.0004 & 0.0003 & 0 & 0.0005\\
+\hline
+Median & 0.0006 & 0.0006 & -0.0002 & 0.0004\\
+\hline
+Std.Dev & 0.0161 & 0.0126 & 0.0171 & 0.0185\\
+\hline
+Min & -0.1227 & -0.0881 & -0.1935 & -0.1457\\
+\hline
+Max & 0.0885 & 0.0761 & 0.1549 & 0.1353\\
+\hline
+Skewness & -0.3902 & -0.1333 & -0.837 & -0.1218\\
+\hline
+Kurtosis & 6.3353 & 3.5137 & 26.4552 & 5.0679\\
+\hline
+Observations & 2208 & 2208 & 2208 & 2208\\
+\hline
+Jarque.Bera & 3758.53* & 1146.21* & 64776.75* & 2375.19*\\
+\hline
+Ljung.Box & 2100.8* & 652.49* & 1839.24* & 1171.94\\
+\hline
+LM.GARCH & 1331.899* & 347.2372* & 930.0183* & 649.1169*\\
+\hline
+\multicolumn{5}{l}{\textsuperscript{} Note: This table provides summary statistics for daily returns of}\\
+\multicolumn{5}{l}{the sectors used in our study. Sample period: 1 January 2014 to 31}\\
+\multicolumn{5}{l}{October 2022. * denotes statistical significance at 1\%}\\
+\end{tabular}
+\end{table}
 
-\begin{figure}[H]
+\hypertarget{serial-autocorrelation-and-arch-effects}{%
+\subsection{Serial Autocorrelation and ARCH
+Effects}\label{serial-autocorrelation-and-arch-effects}}
 
-{\centering \includegraphics{Paper_files/figure-latex/SWIX-1} 
+The Ljung-Box test is used to examine the data for serial
+autocorrelation over longer time periods, therefore a lag length of 10
+is used. The results in Table \ref{table1} show that the null hypothesis
+of no autocorrelation can be rejected, requiring autoregressive terms in
+the mean equations to be fitted on all of the data. To supplement the
+Ljung-Box test, Figure \ref{LogRet} plots the daily returns. Figure
+\ref{LogRet} displays periods of volatility clustering, otherwise known
+as market momentum. This is a strong indication of second order
+persistence in the time series, pointing to autoregressive conditional
+heteroskedasticity (ARCH) effects and long memory that require explicit
+modelling of the variance components.
 
-}
-
-\caption{SWIX Weight Contribution \label{SWIX}}\label{fig:SWIX}
-\end{figure}
+Engle (\protect\hyperlink{ref-engle}{1982}) LM-GARCH test confirms the
+presence of ARCH effects in all the series using:
+\[\epsilon_t^2= \beta_0 + (\Sigma_{s = 1}^{10}\beta_s\epsilon_{t-s}^2) + v_t \].
+To control for these ARCH effects, Engle
+(\protect\hyperlink{ref-engle}{1982}) showed that it is possible to
+simultaneously model the mean and variance equations of a series using
+GARCH models. This technique will be further utilized to extract the
+time-varying conditional correlations of our time series data.
 
 \begin{figure}[H]
 
@@ -284,67 +369,407 @@ Abstract
 \caption{Log Returns per Sector for the SWIX \label{LogRet}}\label{fig:LogRet}
 \end{figure}
 
-\hypertarget{dcc-garch-model-fit}{%
-\section{DCC GARCH Model Fit}\label{dcc-garch-model-fit}}
+\hypertarget{co-integration-tests}{%
+\subsection{Co-Integration Tests}\label{co-integration-tests}}
 
-\hypertarget{estimate-std.-error-t-value-pr-t}{%
-\subsection{Estimate Std. Error t value Pr(\textgreater{} \textbar{}
-t\textbar{} )}\label{estimate-std.-error-t-value-pr-t}}
+The next step is to test for co-integration in order to motivate the
+study of the time series conditional correlations. The Johansen
+(\protect\hyperlink{ref-johansen1988}{1988}) co-integration test will be
+used to confirm whether there is at least one linear long-run
+relationship among the time series that would yield stationary
+residuals. The Johansen co-integration test uses a Vector Error
+Correction Model (VECM) approach with the form:
 
-{[}Resources{]}.omega 0.00000 0.00001 0.304 0.761\\
-{[}Resources{]}.alpha1 0.005 0.033 0.147 0.883\\
-{[}Resources{]}.beta1 0.947 0.050 18.749 0\\
-{[}Industrials{]}.omega 0.00000 0.00000 1.755 0.079\\
-{[}Industrials{]}.alpha1 0.017 0.009 1.822 0.068\\
-{[}Industrials{]}.beta1 0.907 0.017 54.780 0\\
-{[}Financials{]}.omega 0.00000 0.00000 0.966 0.334\\
-{[}Financials{]}.alpha1 0.032 0.022 1.492 0.136\\
-{[}Financials{]}.beta1 0.907 0.033 27.601 0\\
-{[}Joint{]}dcca1 0.039 0.005 7.806 0\\
-{[}Joint{]}dccb1 0.949 0.008 123.261 0\\
-------------------------------------------------------------
+\begin{align}
+  \Delta p_t = \prod p_{t-k} + \Gamma_1 p_{t-1} + \Gamma_2 p_{t-2} + ... + \Gamma_{7} p_{t-7} + \mu + \delta (t) + \theta D_t + \epsilon_t \label{eq1}
+\end{align}
 
-\hypertarget{loadshedding-dcc-garch-model-fit}{%
-\section{Loadshedding DCC GARCH Model
-Fit}\label{loadshedding-dcc-garch-model-fit}}
+where \(p_t\) is a \((1 \times 4)\) vector of the daily returns for the
+sectors at time \(t\). The Johansen test centres around the examination
+of the \(\prod\)-matrix. The \(\prod\)-matrix has form
+\(\prod = \alpha \beta^{'}\) where \(\beta\) is the \(k^{th}\) order
+co-integrating vector and \(\alpha\) is the adjustment parameter. Below
+the Trace and Maximum Eigenvalue tests are used to consider the rank of
+the \(\prod\)-matrix using its eigenvalues. The rank will give an
+indication of long-run dependence. The Trace statistic tests whether the
+number of co-integrating vectors of the system is less than or equal to
+4, while the Max-Eigenvalue statistic reflects separate tests used on
+each eigenvalue of the \(\prod\)-matrix. If the tests indicate that the
+rank of \(\prod\) is statistically likely to be greater than 0, it would
+imply that there is co-integration and a long-run relationship between
+the variables.
 
-\hypertarget{estimate-std.-error-t-value-pr-t-1}{%
-\subsection{Estimate Std. Error t value Pr(\textgreater{} \textbar{}
-t\textbar{} )}\label{estimate-std.-error-t-value-pr-t-1}}
+The findings from the Trace test is that all relationships are
+co-integrating at the 1\% significance level. The Eigenvalue test is
+conducted and confirms this result. This could indicate that the sectors
+have a common underlying factor that affects their movements. The
+co-integrating relationship represents correlation between the time
+series processes in the long term and validates the necessity to study
+these co-movements.
 
-{[}Resources{]}.omega 0.00004 0.00003 1.399 0.162\\
-{[}Resources{]}.alpha1 0.00000 0.101 0.00000 1.000\\
-{[}Resources{]}.beta1 0.791 0.161 4.907 0.00000\\
-{[}Industrials{]}.omega 0.00001 0.00000 24.162 0\\
-{[}Industrials{]}.alpha1 0.00000 0.028 0.00000 1.000\\
-{[}Industrials{]}.beta1 0.825 0.023 35.958 0\\
-{[}Financials{]}.omega 0.00003 0.00001 3.121 0.002\\
-{[}Financials{]}.alpha1 0.018 0.058 0.306 0.760\\
-{[}Financials{]}.beta1 0.672 0.071 9.408 0\\
-{[}Joint{]}dcca1 0.050 0.015 3.414 0.001\\
-{[}Joint{]}dccb1 0.895 0.032 27.577 0\\
-------------------------------------------------------------
+\hypertarget{unconditional-coerrelation}{%
+\subsection{Unconditional
+Coerrelation}\label{unconditional-coerrelation}}
 
-\hypertarget{no-loadshedding-dcc-garch-model-fit}{%
-\section{No Loadshedding DCC GARCH Model
-Fit}\label{no-loadshedding-dcc-garch-model-fit}}
+Table \ref{corrtab} gives the unconditional correlation of returns of
+the sectors for the entire period as well as for the unconditional
+correlation for the period where South Africa experienced load-shedding.
 
-\hypertarget{estimate-std.-error-t-value-pr-t-2}{%
-\subsection{Estimate Std. Error t value Pr(\textgreater{} \textbar{}
-t\textbar{} )}\label{estimate-std.-error-t-value-pr-t-2}}
+These static estimates of historic correlation are often used in
+practice but have many limitations. The unconditional correlations are
+limited by the sample period and do not account for any changes.
+Therefore they do not accurately reflect the relationships between the
+time series at specific points in time. In this section, it has been
+observed that the time series data of the sector returns display both
+first and second order serial autocorrelation. Thus the static estimates
+of correlation are misleading when the mean persistence and conditional
+heteroskedasticity is not controlled for. Static estimates of
+correlation also fail to take into account the dynamic nature of the
+underlying correlations. In the next section the underlying correlations
+conditional on past information will be studied.
 
-{[}Resources{]}.omega 0.00000 0.00000 0.437 0.662\\
-{[}Resources{]}.alpha1 0.026 0.021 1.256 0.209\\
-{[}Resources{]}.beta1 0.934 0.035 26.758 0\\
-{[}Industrials{]}.omega 0.00000 0.00001 0.365 0.715\\
-{[}Industrials{]}.alpha1 0.023 0.036 0.641 0.521\\
-{[}Industrials{]}.beta1 0.912 0.074 12.253 0\\
-{[}Financials{]}.omega 0.00000 0.00001 0.369 0.712\\
-{[}Financials{]}.alpha1 0.039 0.051 0.771 0.441\\
-{[}Financials{]}.beta1 0.908 0.075 12.101 0\\
-{[}Joint{]}dcca1 0.036 0.005 6.747 0\\
-{[}Joint{]}dccb1 0.954 0.008 120.629 0\\
-------------------------------------------------------------
+\begin{table}
+
+\caption{\label{tab:corrtab}Static Unconditional Correlation \label{corrtab}}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{l|r|r|r|r}
+\hline
+  & Financials & Industrials & Property & Resources\\
+\hline
+Financials & 1.0000 & 0.5779 & 0.6855 & 0.5005\\
+\hline
+Industrials & 0.5096 & 1.0000 & 0.5267 & 0.5171\\
+\hline
+Property & 0.6212 & 0.3557 & 1.0000 & 0.4156\\
+\hline
+Resources & 0.3770 & 0.4679 & 0.2746 & 1.0000\\
+\hline
+\multicolumn{5}{l}{\textsuperscript{} Note: This table provides correlation for daily returns of}\\
+\multicolumn{5}{l}{the different sectors over the whole period (bottom left)}\\
+\multicolumn{5}{l}{and just the periods of load-shedding (top right).}\\
+\end{tabular}
+\end{table}
+
+\hypertarget{methodology}{%
+\section{\texorpdfstring{Methodology
+\label{Meth}}{Methodology }}\label{methodology}}
+
+\hypertarget{dcc-model}{%
+\subsection{DCC Model}\label{dcc-model}}
+
+The goal of this study is to examine the dynamic correlations between
+the Industrial, Financial, Property and Resource sectors of the ALSI as
+well as to understand how these correlations change over time. To
+achieve this goal, the DCC (Dynamic Conditional Correlation) model is
+used. The DCC model is a statistical model that is commonly used to
+analyse the correlations between multiple time series data. It consists
+of two components: a GARCH (Generalized Autoregressive Conditional
+Heteroscedasticity) model, which is used to model the variance of the
+time series data, and a dynamic conditional correlation model, which is
+used to model the correlations between the time series.
+
+To estimate the DCC model the maximum likelihood estimation procedure is
+used. This involves specifying the functional form of the model,
+including the functional form of the GARCH and dynamic conditional
+correlation components. Then estimating the parameters of the model that
+maximize the likelihood of the data given the model. The DCC model has
+been widely used in the literature to study dynamic correlations in
+financial markets.
+
+This study will use the sector daily returns, a \(1 \times 4\)
+stochastic vector \(\{r_t\}\). The DCC model is specified as follows:
+
+\begin{align}
+  r_{it} = \mu_{it} + \epsilon_{it} \label{eq2}
+\end{align}
+
+\begin{align}
+  \epsilon_{it} = \sqrt{H_{it}}. \eta_i  \text{  with  } \epsilon_{it} \sim N(0, H_t)  \text{  and  } \eta_i \sim N(0, I) . \label{eq3}
+\end{align}
+
+Where \(\mu_t\) is the unconditional AR(1)-mean equation, \(\epsilon_t\)
+the vector of ordinary residuals, \(H_t\) the \(N \times N\) conditional
+covariance matrix and \(\eta_i\) the standardised residuals.
+
+Various MV-GARCH models have been proposed to model the covariance
+process, \(H_t\), in Equation \ref{eq3}. The DCC model will be used in
+this paper which allows the covariance matrix to be separated into
+different univariate volatility equations and their respective
+conditional correlations.
+
+The covariance matrix in the DCC-Model is defined as follows:
+
+\begin{align}
+  H_t = D_tR_tD_t \label{eq4}
+\end{align}
+
+with \(D_t = diag(\sqrt{h_{11,t}}...\sqrt{h_{NN,t}})\) and \(h_{ii,t}\)
+taking the functional form of the univariate GARCH model specified. The
+dynamic conditional correlation structure is then given by the following
+equation:
+
+\begin{align}
+  Q_{ij,t} = (1 - \theta_1 - \theta_2).\bar{Q} + \theta_1(\epsilon_{i,t-1}\epsilon_{j,t-1}^{'}) + \theta_2(Q_{ij,t-1})  \label{eq5}
+\end{align}
+
+where \(Q_{ij,t}\) is the unconditional variance between different
+series \(i\) and \(j\), \(\bar{Q}\) is the unconditional covariance
+between the series estimated in the univariate GARCH specification and
+estimation step. The scalar parameters \(\theta_1\) and \(\theta_2\)
+must satisfy both the non negativity assumption \(\theta_1 \geq 0\) and
+\(\theta_2 \geq 0\) as well as the assumption that
+\(\theta_1 + \theta_2 < 1\). The second step the requires only the
+estimate of \(\theta_1\) and \(\theta_2\) using a likelihood function.
+Equation \ref{5} expresses the unconditional variance matrix,
+\(Q_{ij,t}\), as a standard GARCH-type equation, so that we can derive
+the dynamic conditional correlation matrix, \(R_t\), between any two
+series as:
+
+\begin{align}
+  R_t = Q_{ij,t}^{*-1}. Q_{ij,t}. Q_{ij,t}^{*-1} \label{eq6}
+\end{align}
+
+with \(Q_{ij,t}^{*}\) a diagonal matrix with the square root of the
+diagonal elements of \(Q_{ij,t}\) as its entries, such that
+\(Q_{ij,t}^{*} = Diag(Q_t)^{1/2}\). This process can be thought of
+intuitively as multiplying both sides of Equation \ref{6} by the inverse
+of Diagonal matrix \(D_t\). The dynamic conditional correlation matrix,
+\(R_{ij,t}\) will therefore have entries in the bivariate framework as
+follows:
+
+\begin{align}
+  \rho_{ij,t} = \dfrac{q_{ij,t}}{\sqrt{q_{ii,t}.q_{jj,t}}} \\ 
+  = \dfrac{(1 - \theta_1 - \theta_2) \bar{q} + \theta_1 \epsilon_{i,t-1} \epsilon_{j,t-1}^{'} + \theta_2 q_{ij,t-1}}{((1 - \theta_1 - \theta_2)\bar{q_i} + \theta_1     \epsilon_{i,t-1}^2 + \theta_2 q_{ii,t-1}) . ((1 - \theta_1 - \theta_2) \bar{q_{j}} + \theta_1 \epsilon_{j,t-1}^2 + \theta_2 q_{jj,t-1})} \label{eq7}
+\end{align}
+
+Following the methodology of Engle
+(\protect\hyperlink{ref-engle2002}{2002}), the DCC model is estimated by
+maximising the log-likelihood function for Equation \ref{eq2} as:
+
+\begin{align}
+  L(\theta, \phi) = -\dfrac{1}{2} \sum_{t=1}^T (ln(2\pi) + ln(\left|D_tR_tD_t\right|) + \epsilon_t^{'}(D_tR_tD_t)^{-1}\epsilon_t)  \label{eq8}
+\end{align}
+
+and using the fact that \(H_t = D_tR_tD_t\), Equation \ref{eq8} can be
+simplified as:
+
+\begin{align}
+  L(\theta, \phi) = -\dfrac{T}{2} ln(2\pi) - \dfrac{1}{2} . \sum_{t=1}^T (2 . ln \left| D_t \right| + \epsilon_t^{'} (D_tD_t)^{-1} \epsilon_t) - \dfrac{1}{2}\sum_{t=1}^T (ln\left| R_t \right| + \epsilon_t^{'} (R_t^{-1}) \epsilon_t)  \label{eq9}
+\end{align}
+
+The second step is then to maximise the correlation part by using the
+maximised value in the equation above to solve:
+
+\begin{align}
+  L_C(\theta, \phi) = -\dfrac{1}{2}\sum_{t=1}^T (ln\left| R_t \right| + \epsilon_t^{'} (R_t^{-1}) \epsilon_t) \label{eq10}
+\end{align}
+
+The two-stage DCC estimation procedure outlined above has parameter
+estimates that are both consistent and asymptotically normal. Cappiello,
+Engle \& Sheppard
+(\protect\hyperlink{ref-cappiello2006asymmetric}{2006}) find a clear
+limitation of the DDC, that the dynamics of the conditional correlation
+do not account for asymmetric effects. This means that although the
+model accounts for the magnitude of past shocks' impact on future
+conditional volatility and correlation, it does not differentiate
+between positive and negative shock effects. This limitation will not be
+resolved in this study.
+\footnote{In order to account for these effects the Asymmetric Dynamic Conditional Correlation (ADCC) was created, for more information follow @cappiello2006asymmetric or @engle1995multivariate}
+
+After the GARCH model is fit at a univariate level, the dynamic
+conditional correlation series will be fit for each bi-variate
+relationship. This dynamic structure of the returns of each sector pair
+of Resources, Financials, Property and Industrials will be explored
+further.
+
+\hypertarget{univariate-specification}{%
+\subsection{Univariate Specification}\label{univariate-specification}}
+
+The first stage in building the DCC model framework consists of fitting
+univariate GARCH specifications to each series of returns. The
+univariate GARCH model fit on the data is the GJR-GARCH
+{[}glosten1993relation{]}. Table \ref{table:univar} below contains the
+chosen univariate GJR-GARCH fit.
+
+The Univariate GARCH model includes:
+
+Mean equation: \begin{align}
+  r_t = \mu + a_1. r_{t-1} + \epsilon_t  \label{eq11}
+\end{align}
+
+Volatility equation:
+
+\begin{align}
+  \epsilon_t = \sqrt{h_t}.\eta_t, \quad \text{where} \eta_t \sim N(0,1)  \label{eq12}
+\end{align}
+
+where \(r_t\) is the daily return for a sector at time \(t\), \(\mu\) is
+the unconditional mean of the time series and \(a_1\) is the coefficient
+for the autoregressive term in the mean equation. The conditional
+variance at time \(t\), \(h_t\), is modeled as a function of the
+variance at previous time periods and the error term at previous time
+periods. The random error term, \(\epsilon_t\), is multiplied by the
+square root of the conditional variance to ensure that the variance is
+always positive. The standardized error term, \(\eta_t\), has a mean of
+0 and a standard deviation of 1. Equation \ref{eq12} specifies the
+relationship between the error term \(\epsilon_t\) and the conditional
+variance \(h_t\).
+
+The GJR-GARCH model is a variant of the GARCH model that can effectively
+capture fat tails, excess kurtosis, and leverage effects, allowing for
+more flexibility in modeling the time-varying variance. In the
+GJR-GARCH(1,1) model, the variance at time \(t\) is modelled as:
+
+\begin{align}
+  h_t^2 = \beta_0 + \beta_1( |\epsilon_{t-1}| - \gamma \epsilon_{t-1})^2 + \beta_2 h_{t-1}^2  \label{eq13}
+\end{align}
+
+This model combines elements of both the ARCH and GARCH models, and
+different model specifications can be obtained by varying the parameters
+\(\gamma\) and \(\beta_1\). For example, setting \(\gamma = 0\) results
+in a GARCH model.
+
+The parameter \(\gamma\) in GJR-GARCH model reflects the leverage
+effect, which refers to the phenomenon where the magnitude of the
+response of the variance to a shock depends on the sign of the shock. A
+positive value of \(\gamma\) indicates that negative shocks tend to have
+a larger impact on the variance than positive shocks of the same
+magnitude, while a negative value of \(\gamma\) indicates the opposite.
+This model specifications allow the GJR-GARCH model to capture different
+responses of the variance to positive and negative shocks, which can be
+important for accurately modelling time series data that exhibits
+asymmetry.
+
+Table \ref{univar} shows that the returns series for all sectors display
+strong persistence in volatility and both ARCH and GARCH effects, as
+measured by \((\alpha_1 + \beta_2 )\). This indicates volatility
+clustering. The statistical significance of the \(\beta_2\) parameter
+for all sectors in the GJF-GARCH model indicates a strong presence of
+conditional heteroskedasticity. This is consistent with the results of
+Engle (\protect\hyperlink{ref-engle}{1982}) LM-GARCH test run in section
+\ref{Data} and confirms the presence of ARCH effects. This further
+suggests that the static measures of return correlations between sector
+returns in the last section are not reliable.
+
+The main takeaway from Table \ref{univar} comes from the \(\alpha_1\)
+and \(\beta_2\) parameters, which can be used to assess the persistence
+of volatility in the time series. \(\alpha_1\) measures the contribution
+of past shocks to the current variance, while \(\beta_1\) measures the
+contribution of the past variance to the current variance. A positive
+value of \(\alpha_1\) indicates that positive shocks tend to be followed
+by more volatility than negative shocks of a similar magnitude, while a
+negative value of \(\alpha_1\) indicates the opposite. Table
+\ref{univar} shows that Financials and Industrials have a negative value
+for \(\alpha_1\) indicating an asymmetry where negative shocks have a
+larger impact on volatility than positive shocks. Property and Resources
+both have positive values for \(\alpha_1\). Similarly, a positive value
+of \(\beta_2\) indicates that high levels of volatility tend to persist
+over time, while a negative value of \(\beta_2\) indicates that high
+levels of volatility tend to dissipate over time. All sectors have a
+significant and positive \(\beta_2\). All sectors also have a positive
+and significant \(\gamma\) indicating that negative shocks tend to have
+a larger impact on the variance than positive shocks of the same
+magnitude.
+
+To estimate the time-varying DCC model, the next step is to extract the
+standardized residuals from the estimated GJR GARCH model and maximize
+the log-likelihood function. This allows for the estimation of the
+time-varying conditional correlations between the sectors of the ALSI.
+
+\begin{table}[H]
+
+\caption{\label{tab:univar}Univariate GJR GARCH Coefficients \label{univar}}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{l|r|r|r|r|r|r|r|r}
+\hline
+Sector & $a_0$ & $a_1$ & $\beta_0$ & $\beta_1$ & $\beta_2$ & $\gamma$ & Skewness & Shape\\
+\hline
+Financials & 0.0003 & -0.0044 & 0.0000 & 0.0241 & 0.9176 & 0.0906 & 0.9546 & 8.0904\\
+\hline
+ & 0.2075 & 0.8405 & 0.2271 & 0.0980 & 0.0000 & 0.0001 & 0.0000 & 0.0000\\
+\hline
+Industrials & 0.0002 & -0.0084 & 0.0000 & 0.0057 & 0.9017 & 0.1295 & 0.9117 & 8.8658\\
+\hline
+ & 0.2538 & 0.6971 & 0.0000 & 0.1845 & 0.0000 & 0.0000 & 0.0000 & 0.0000\\
+\hline
+Property & -0.0001 & 0.0005 & 0.0000 & 0.0374 & 0.8854 & 0.1012 & 1.0024 & 5.4217\\
+\hline
+ & 0.6317 & 0.9809 & 0.0527 & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 0.0000\\
+\hline
+Resources & 0.0003 & 0.0066 & 0.0000 & 0.0169 & 0.9444 & 0.0626 & 0.9554 & 10.3411\\
+\hline
+ & 0.3851 & 0.7588 & 0.4273 & 0.2334 & 0.0000 & 0.0001 & 0.0000 & 0.0000\\
+\hline
+\multicolumn{9}{l}{\textsuperscript{} Note: This table provides the univariate GJR GARCH model coefficients with the p-values underneath.}\\
+\end{tabular}}
+\end{table}
+
+\hypertarget{results}{%
+\section{Results}\label{results}}
+
+In order to understand the dynamics within the cryptocurrency market,
+the results of both the Go-GARCH and DCC models are analyzed. The
+Go-GARCH model considers the influence of past innovations of each time
+series on its own conditional variance, as well as the effect of past
+innovations of other time series on the variance of the target time
+series. This model captures the direct impact of one time series on the
+variance of another. On the other hand, the DCC model separates the
+variance and the correlation structure into two distinct components: the
+GARCH component, which models the variance of each time series, and the
+dynamic conditional correlation component, which models the correlations
+between the time series. This allows the DCC model to capture both the
+direct and indirect effects of one time series on the variance of
+another time series. Additionally, the DCC model allows for the dynamic
+correlations between time series to vary over time, while the Go-GARCH
+model assumes that the correlations are constant.
+
+\hypertarget{whole-period}{%
+\subsection{Whole Period}\label{whole-period}}
+
+\begin{table}
+
+\caption{\label{tab:dccfitw}..... \label{dccfitw}}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{l|r|r|r|r}
+\hline
+  &  Estimate &  Std. Error &  t value & Pr(>|t|)\\
+\hline
+[Financials].omega & 0.0000 & 0.0000 & 0.6434 & 0.5199\\
+\hline
+[Financials].alpha1 & 0.0241 & 0.0248 & 0.9719 & 0.3311\\
+\hline
+[Financials].beta1 & 0.9176 & 0.0471 & 19.4922 & 0.0000\\
+\hline
+[Industrials].omega & 0.0000 & 0.0000 & 5.3197 & 0.0000\\
+\hline
+[Industrials].alpha1 & 0.0057 & 0.0071 & 0.8065 & 0.4199\\
+\hline
+[Industrials].beta1 & 0.9017 & 0.0092 & 98.1795 & 0.0000\\
+\hline
+[Property].omega & 0.0000 & 0.0000 & 0.6647 & 0.5062\\
+\hline
+[Property].alpha1 & 0.0374 & 0.0397 & 0.9403 & 0.3471\\
+\hline
+[Property].beta1 & 0.8854 & 0.0178 & 49.6809 & 0.0000\\
+\hline
+[Resources].omega & 0.0000 & 0.0000 & 0.3505 & 0.7260\\
+\hline
+[Resources].alpha1 & 0.0169 & 0.0301 & 0.5623 & 0.5739\\
+\hline
+[Resources].beta1 & 0.9444 & 0.0479 & 19.7292 & 0.0000\\
+\hline
+[Joint]dcca1 & 0.0266 & 0.0047 & 5.6699 & 0.0000\\
+\hline
+[Joint]dccb1 & 0.9515 & 0.0090 & 105.1736 & 0.0000\\
+\hline
+\multicolumn{5}{l}{\textsuperscript{} Note: This table displays the fit of the dynamic conditional}\\
+\multicolumn{5}{l}{correlations of daily returns of different sectors within the}\\
+\multicolumn{5}{l}{ALSI over the full period of this study.}\\
+\end{tabular}
+\end{table}
 
 \begin{figure}[H]
 
@@ -373,12 +798,175 @@ t\textbar{} )}\label{estimate-std.-error-t-value-pr-t-2}}
 \caption{Dynamic Conditional Correlations: Industrials \label{DCCfulli}}\label{fig:DCCfulli}
 \end{figure}
 
-\hypertarget{methodology}{%
-\section{\texorpdfstring{Methodology
-\label{Meth}}{Methodology }}\label{methodology}}
+\begin{figure}[H]
 
-\hypertarget{results}{%
-\section{Results}\label{results}}
+{\centering \includegraphics{Paper_files/figure-latex/DCCfullp-1} 
+
+}
+
+\caption{Dynamic Conditional Correlations: Property \label{DCCfullp}}\label{fig:DCCfullp}
+\end{figure}
+
+\begin{table}
+\centering\begingroup\fontsize{9}{11}\selectfont
+
+\begin{tabular}{l|r|r|r|r}
+\hline
+  & Mean & Std.Dev & Min & Max\\
+\hline
+Financials -> Industrials & 0.4856 & 0.1342 & -0.0124 & 0.7865\\
+\hline
+Financials -> Resources & 0.5443 & 0.0949 & 0.2640 & 0.8294\\
+\hline
+Financials -> Property & 0.2869 & 0.1331 & -0.2362 & 0.6137\\
+\hline
+Industrials -> Resources & 0.3089 & 0.1252 & -0.0669 & 0.7016\\
+\hline
+Industrials -> Property & 0.4283 & 0.0969 & 0.1348 & 0.7545\\
+\hline
+Resources -> Property & 0.1646 & 0.1257 & -0.1447 & 0.5596\\
+\hline
+\multicolumn{5}{l}{\textsuperscript{} Note: This table provides summary statistics of the dynamic}\\
+\multicolumn{5}{l}{conditional correlations of daily returns of different sectors within}\\
+\multicolumn{5}{l}{the ALSI over the entire period of this study.}\\
+\end{tabular}
+\endgroup{}
+\end{table}
+
+\hypertarget{load-shedding-period}{%
+\subsection{Load Shedding Period}\label{load-shedding-period}}
+
+\begin{table}
+\centering\begingroup\fontsize{9}{11}\selectfont
+
+\begin{tabular}{l|r|r|r|r}
+\hline
+  &  Estimate &  Std. Error &  t value & Pr(>|t|)\\
+\hline
+[Financials].omega & 0.0000 & 0.0000 & 2.6464 & 0.0081\\
+\hline
+[Financials].alpha1 & 0.0000 & 0.0758 & 0.0000 & 1.0000\\
+\hline
+[Financials].beta1 & 0.7239 & 0.0818 & 8.8533 & 0.0000\\
+\hline
+[Industrials].omega & 0.0000 & 0.0000 & 18.2457 & 0.0000\\
+\hline
+[Industrials].alpha1 & 0.0000 & 0.0143 & 0.0000 & 1.0000\\
+\hline
+[Industrials].beta1 & 0.8280 & 0.0183 & 45.1670 & 0.0000\\
+\hline
+[Property].omega & 0.0001 & 0.0000 & 3.1694 & 0.0015\\
+\hline
+[Property].alpha1 & 0.0687 & 0.0954 & 0.7200 & 0.4716\\
+\hline
+[Property].beta1 & 0.5314 & 0.1099 & 4.8351 & 0.0000\\
+\hline
+[Resources].omega & 0.0000 & 0.0000 & 2.5240 & 0.0116\\
+\hline
+[Resources].alpha1 & 0.0000 & 0.0279 & 0.0000 & 1.0000\\
+\hline
+[Resources].beta1 & 0.7978 & 0.0585 & 13.6449 & 0.0000\\
+\hline
+[Joint]dcca1 & 0.0247 & 0.0102 & 2.4348 & 0.0149\\
+\hline
+[Joint]dccb1 & 0.9275 & 0.0314 & 29.5384 & 0.0000\\
+\hline
+\multicolumn{5}{l}{\textsuperscript{} Note: This table displays the fit of the dynamic conditional}\\
+\multicolumn{5}{l}{correlations of daily returns of different sectors within the}\\
+\multicolumn{5}{l}{ALSI over the periods that encounter loadshedding in this study.}\\
+\end{tabular}
+\endgroup{}
+\end{table}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCClsr-1} 
+
+}
+
+\caption{Dynamic Conditional Correlations: Resources  \label{DCClsr}}\label{fig:DCClsr}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCClsi-1} 
+
+}
+
+\caption{Dynamic Conditional Correlations: Industrials g \label{DCClsi}}\label{fig:DCClsi}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCClsf-1} 
+
+}
+
+\caption{Dynamic Conditional Correlations: Financials \label{DCClsf}}\label{fig:DCClsf}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCClsp-1} 
+
+}
+
+\caption{Dynamic Conditional Correlations: Property  \label{DCClsp}}\label{fig:DCClsp}
+\end{figure}
+
+\begin{table}
+\centering\begingroup\fontsize{9}{11}\selectfont
+
+\begin{tabular}{l|r|r|r|r}
+\hline
+  & Mean & Std.Dev & Min & Max\\
+\hline
+Financials -> Industrials & 0.5077 & 0.0763 & 0.2413 & 0.7059\\
+\hline
+Financials -> Resources & 0.5344 & 0.0655 & 0.3827 & 0.7042\\
+\hline
+Financials -> Property & 0.3516 & 0.0914 & 0.1279 & 0.5758\\
+\hline
+Industrials -> Resources & 0.4565 & 0.0730 & 0.3156 & 0.7085\\
+\hline
+Industrials -> Property & 0.4050 & 0.1006 & 0.0987 & 0.6634\\
+\hline
+Resources -> Property & 0.2957 & 0.0824 & 0.0803 & 0.5228\\
+\hline
+\multicolumn{5}{l}{\textsuperscript{} Note: This table provides summary statistics of the dynamic}\\
+\multicolumn{5}{l}{conditional correlations of daily returns of different sectors}\\
+\multicolumn{5}{l}{within the ALSI over the periods that encounter loadshedding in this}\\
+\multicolumn{5}{l}{study.}\\
+\end{tabular}
+\endgroup{}
+\end{table}
+
+The results from the Dynamic Conditional Correlations (DCC) model show
+that the volatility of cryptocurrencies exhibits strong co-movements, as
+observed in the Table \ref{table:descdcc} and illustrated in the Figure
+\ref{fig:btcdcc}. The DCC model, which extracts the underlying process
+and removes noise from the data, reveals lower correlations compared to
+the static correlations presented in section \ref{unconcorr}. The
+minimum and maximum values of the correlations tend to occur during
+times of endogenous and exogenous shocks to the cryptocurrency market.
+This suggests that the cryptocurrency market is highly interconnected
+and exhibits volatility clustering, as found in section \ref{volclust}.
+
+When examining the dynamic correlations between Bitcoin and the
+stablecoins Dai and Tether in Figure \ref{fig:btcdcc}, it is clear that
+the co-movements between these assets are relatively low. This
+highlights the utility of stablecoins in reducing volatility in the
+cryptocurrency market, as they offer an on-chain source of a safe-haven
+asset. This allows investors to remain in the cryptocurrency market
+while avoiding significant volatility. However, the graph also shows
+that there are periods of increased co-movements between stablecoins and
+other cryptocurrencies, particularly during times of high volatility
+caused by exogenous or endogenous shocks. This suggests that
+stablecoins, while mostly uncorrelated with the rest of the
+cryptocurrency market, do exhibit some degree of similarity in terms of
+volatility. This could be due to the fact that stablecoins are seen as
+safe-haven assets and therefore tend to experience similar movements in
+times of risk-on and risk-off sentiment.
 
 \hfill
 
@@ -392,22 +980,105 @@ t\textbar{} )}\label{estimate-std.-error-t-value-pr-t-2}}
 \addcontentsline{toc}{section}{References}
 
 \hypertarget{refs}{}
-\begin{CSLReferences}{0}{0}
+\begin{CSLReferences}{1}{0}
+\leavevmode\vadjust pre{\hypertarget{ref-cappiello2006asymmetric}{}}%
+Cappiello, L., Engle, R.F. \& Sheppard, K. 2006. Asymmetric dynamics in
+the correlations of global equity and bond returns. \emph{Journal of
+Financial econometrics}. 4(4):537--572.
+
+\leavevmode\vadjust pre{\hypertarget{ref-engle2002}{}}%
+Engle, R. 2002. Dynamic conditional correlation: A simple class of
+multivariate generalized autoregressive conditional heteroskedasticity
+models. \emph{Journal of Business \& Economic Statistics}.
+20(3):339--350.
+
+\leavevmode\vadjust pre{\hypertarget{ref-engle}{}}%
+Engle, R.F. 1982. Autoregressive conditional heteroscedasticity with
+estimates of the variance of united kingdom inflation.
+\emph{Econometrica: Journal of the econometric society}. 987--1007.
+
+\leavevmode\vadjust pre{\hypertarget{ref-johansen1988}{}}%
+Johansen, S. 1988. Statistical analysis of cointegration vectors.
+\emph{Journal of economic dynamics and control}. 12(2-3):231--254.
+
 \end{CSLReferences}
 
 \hypertarget{appendix}{%
 \section*{Appendix}\label{appendix}}
 \addcontentsline{toc}{section}{Appendix}
 
-\hypertarget{appendix-a}{%
-\subsection*{Appendix A}\label{appendix-a}}
-\addcontentsline{toc}{subsection}{Appendix A}
+\hypertarget{no-loadshedding-results}{%
+\subsection{No Loadshedding Results}\label{no-loadshedding-results}}
 
-Some appendix information here
+\begin{table}
+\centering\begingroup\fontsize{9}{11}\selectfont
 
-\hypertarget{appendix-b}{%
-\subsection*{Appendix B}\label{appendix-b}}
-\addcontentsline{toc}{subsection}{Appendix B}
+\begin{tabular}{l|r|r|r|r}
+\hline
+  &  Estimate &  Std. Error &  t value & Pr(>|t|)\\
+\hline
+[Financials].omega & 0.0000 & 0.0000 & 0.5307 & 0.5956\\
+\hline
+[Financials].alpha1 & 0.0308 & 0.0202 & 1.5247 & 0.1273\\
+\hline
+[Financials].beta1 & 0.9319 & 0.0296 & 31.4997 & 0.0000\\
+\hline
+[Industrials].omega & 0.0000 & 0.0000 & 0.1620 & 0.8713\\
+\hline
+[Industrials].alpha1 & 0.0203 & 0.0968 & 0.2099 & 0.8337\\
+\hline
+[Industrials].beta1 & 0.9021 & 0.0823 & 10.9579 & 0.0000\\
+\hline
+[Property].omega & 0.0000 & 0.0000 & 0.4572 & 0.6475\\
+\hline
+[Property].alpha1 & 0.0594 & 0.0502 & 1.1813 & 0.2375\\
+\hline
+[Property].beta1 & 0.8878 & 0.0279 & 31.7715 & 0.0000\\
+\hline
+[Resources].omega & 0.0000 & 0.0000 & 0.4453 & 0.6561\\
+\hline
+[Resources].alpha1 & 0.0393 & 0.0206 & 1.9053 & 0.0567\\
+\hline
+[Resources].beta1 & 0.9418 & 0.0283 & 33.2911 & 0.0000\\
+\hline
+[Joint]dcca1 & 0.0279 & 0.0061 & 4.5714 & 0.0000\\
+\hline
+[Joint]dccb1 & 0.9440 & 0.0143 & 65.8566 & 0.0000\\
+\hline
+\multicolumn{5}{l}{\textsuperscript{} Note: This table displays the fit of the dynamic conditional}\\
+\multicolumn{5}{l}{correlations of daily returns of different sectors within the}\\
+\multicolumn{5}{l}{ALSI over the periods that do not encounter loadshedding in this}\\
+\multicolumn{5}{l}{study.}\\
+\end{tabular}
+\endgroup{}
+\end{table}
+
+\begin{table}
+\centering\begingroup\fontsize{9}{11}\selectfont
+
+\begin{tabular}{l|r|r|r|r}
+\hline
+  & Mean & Std.Dev & Min & Max\\
+\hline
+Financials -> Industrials & 0.4809 & 0.1287 & 0.0128 & 0.7520\\
+\hline
+Financials -> Resources & 0.5440 & 0.0877 & 0.2343 & 0.8391\\
+\hline
+Financials -> Property & 0.2744 & 0.1260 & -0.2475 & 0.5506\\
+\hline
+Industrials -> Resources & 0.2642 & 0.1138 & -0.1141 & 0.5330\\
+\hline
+Industrials -> Property & 0.4384 & 0.0794 & 0.1904 & 0.6814\\
+\hline
+Resources -> Property & 0.1434 & 0.1158 & -0.1522 & 0.5349\\
+\hline
+\multicolumn{5}{l}{\textsuperscript{} Note: This table provides summary statistics of the dynamic}\\
+\multicolumn{5}{l}{conditional correlations of daily returns of different sectors}\\
+\multicolumn{5}{l}{within the ALSI over the periods that do not encounter loadshedding}\\
+\multicolumn{5}{l}{in this study.}\\
+\end{tabular}
+\endgroup{}
+\end{table}
 
 \bibliography{Tex/ref}
 

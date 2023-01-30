@@ -1,5 +1,5 @@
 ---
-title: "The Impact of Loadshedding on SWIX sectors using DCC-GARCH models"
+title: "The Impact of Loadshedding on SWIX Sectors using DCC-GARCH models"
 documentclass: "elsarticle"
 Thesis_FP: FALSE
 output:
@@ -54,7 +54,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width 
 # warning and message = FALSE implies ugly messages and warnings are removed from your pdf.
 # These should be picked up when you execute the command chunks (code sections below) in your rmd, not printed in your paper!
 
-pacman::p_load(modelsummary, gt, knitr, kableExtra, tidyverse, lubridate, tinytex, rmarkdown, crypto2, quantmod, MTS, rmgarch, rugarch, tbl2xts, fmxdat, ggthemes, summarytools, vars, tseries, pander, cowplot, qpcR, tidyquant, stargazer, data.table)
+pacman::p_load(modelsummary, gt, knitr, kableExtra, tidyverse, lubridate, tinytex, rmarkdown, crypto2, quantmod, MTS, rmgarch, rugarch, tbl2xts, fmxdat, ggthemes, summarytools, vars, tseries, pander, cowplot, qpcR, tidyquant, stargazer, data.table, xtable)
 
 list.files('code/', full.names = T, recursive = T) %>% as.list() %>% walk(~source(.))
 
@@ -69,21 +69,28 @@ list.files('../code/', full.names = T, recursive = T) %>% as.list() %>% walk(~so
 
 
 ```{r include=FALSE}
-T40 <- read_rds("../data/T40.rds")
+ALSI <- read_rds("../data/Alsi_Returns.rds")
 
-sectors <- T40 %>% pull(Sector) %>% unique()
+ALSIsel <- ALSI %>% dplyr::select(date, Tickers, Return, J200, Sector)
+
+ALSI_df <- ALSIsel %>% filter(!is.na(J200)) %>% filter(date>= "2014-01-01")
+
+sectors <- ALSI_df %>% pull(Sector) %>% unique()
+
 sector_return <- list()
 for(i in 1:length(sectors)){
     # Loop through sectors and calculate returns and cumulative returns
-    sector_return[[i]] <- portfolio_return_function(T40, sector = sectors[i]) %>% group_by(Portfolio) %>% 
+    sector_return[[i]] <- portfolio_return_function_alsi(ALSI_df, sector = sectors[i]) %>% 
       mutate(cumreturn_Rand = (cumprod(1 + Returns))) %>% # Start at 1
       mutate(cumreturn_Rand = cumreturn_Rand/dplyr:::first(cumreturn_Rand)) %>% 
       mutate(Sector = sectors[i])
 }
+
 # Rename tibbles
 names(sector_return) <- sectors
+
 # Combine Dataframes
-sectors_cum_return <- rbind(sector_return[[1]], sector_return[[2]], sector_return[[3]]) %>% arrange(date)
+sectors_cum_return <- rbind(sector_return[[1]], sector_return[[2]], sector_return[[3]], sector_return[[4]]) %>% arrange(date)
 ```
 
 
@@ -94,27 +101,60 @@ sectors_cum_return <- rbind(sector_return[[1]], sector_return[[2]], sector_retur
 # Introduction \label{Introduction}
 
 
-
-# Data  {-}
-
+# Literature Review
 
 
-```{r CumRet,  warning =  FALSE, fig.align = 'center', fig.cap = "Cumulative Returns per Sector for ALSI and SWIX \\label{CumRet}", fig.ext = 'png', fig.height = 4, fig.width = 7}
+```{r eval=FALSE, include=FALSE, results='asis'}
+summstats_all <- xts_alsi_return %>% 
+  descr(stats = c("mean", "med", "sd", "min", "max", "skewness", "kurtosis", "n.valid"), round.digits = 4, order = c("Financials", "Industrials", "Resources"))
+
+rownames(summstats_all) <- c("Mean", "Median", "Std.Dev", "Min", "Max", "Skewness", "Kurtosis", "Observations" )
+
+round(summstats_all,4) %>% kable() %>% kable_styling(font_size = 9)
+```
+
+
+```{r eval=FALSE, include=FALSE, results='asis'}
+summstats_loadshed <- xts_alsi_return_loadshed %>% 
+  descr(stats = c("mean", "med", "sd", "min", "max", "skewness", "kurtosis", "n.valid"), round.digits = 4, order = c("Financials", "Industrials", "Resources", "Property"))
+
+rownames(summstats_loadshed) <- c("Mean", "Median", "Std.Dev", "Min", "Max", "Skewness", "Kurtosis", "Observations" )
+
+round(summstats_loadshed,4) %>% kable() %>% kable_styling(font_size = 9)
+```
+
+
+```{r eval=FALSE, include=FALSE, results='asis'}
+summstats_no_loadshed <- xts_alsi_return_no_loadshed %>% 
+  descr(stats = c("mean", "med", "sd", "min", "max", "skewness", "kurtosis", "n.valid"), round.digits = 4, order = c("Financials", "Industrials", "Resources", "Property"))
+
+rownames(summstats_no_loadshed) <- c("Mean", "Median", "Std.Dev", "Min", "Max", "Skewness", "Kurtosis", "Observations" )
+
+round(summstats_no_loadshed,4) %>% kable() %>% kable_styling(font_size = 9)
+```
+
+
+# Data \label{Data}
+
+The aim of this project is to construct time-varying conditional correlations between different sectors of the ALSI. These co-movements between sectors are then analysed over a stratified period where South Africa was affected by load-shedding. This study utilises a series of daily returns and weights of stocks in the ALSI, which are then filtered into either the Industrial, Financial, Resource or Property sector. Sector returns are calculated on a daily level and then the entire data set is subset into months than South Africa experienced load-shedding and months where it did not. The sample period of the data is from 1 January 2014 until 31 October 2022. 
+
+The sector returns are plotted in Figure \ref{CumRet} where it is visible that the sectors show characteristics of co-movement, especially during market shocks. This is evident with the onset of COVID-19 in March of 2020 where all sectors demonstrate a significant drawback in cumulative returns. Since this downturn in 2020, the Resource sector has grown significantly while Property has not been able to recover to pre-pandemic levels. 
+
+```{r CumRet,  warning =  FALSE, fig.align = 'center', fig.cap = "Cumulative Returns per Sector for ALSI and SWIX \\label{CumRet}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
 sectors_cum_return_plot <- sectors_cum_return %>% 
-    ggplot() +
-    geom_line(aes(date, cumreturn_Rand, colour = Portfolio), alpha = 0.8) + facet_wrap(~Sector) + fmxdat::fmx_cols() + 
-    labs(y = "Cumulative Returns", x = "") + 
-    fmxdat::theme_fmx(title.size = ggpts(25))
+  ggplot() +
+  geom_line(aes(date, cumreturn_Rand, colour = Sector), alpha = 0.8) + 
+  #facet_wrap(~Sector) + 
+  fmxdat::fmx_cols() + 
+  labs(title = "", y = "Cumulative Returns", x = "") + 
+  fmxdat::theme_fmx(title.size = ggpts(25))
 sectors_cum_return_plot
 
 ```
 
-
 ```{r include=FALSE}
-sectors_cum_return <- sectors_cum_return %>% filter(Portfolio == 'J400') # SWIX
-
-swix_loadshed <- rbind(
+alsi_loadshed <- rbind(
 sectors_cum_return %>% filter(date >= "2014-11-01" & date <= "2015-3-31"),
 sectors_cum_return %>% filter(date >= "2019-02-01" & date <= "2019-3-31"),
 sectors_cum_return %>% filter(date >= "2019-12-01" & date <= "2020-3-31"),
@@ -123,12 +163,21 @@ sectors_cum_return %>% filter(date >= "2021-9-01" & date <= "2021-11-30"),
 sectors_cum_return %>% filter(date >= "2022-2-01" & date <= "2022-4-30"),
 sectors_cum_return %>% filter(date >= "2022-6-01" & date <= "2022-12-31"))
 
-swix_no_loadshed <- sectors_cum_return %>% filter(!date %in% (swix_loadshed %>% pull(date)))
+alsi_no_loadshed <- sectors_cum_return %>% filter(!date %in% (alsi_loadshed %>% pull(date)))
 
-xts_swix_return <- sectors_cum_return %>% tbl_xts(., cols_to_xts = "Returns", spread_by = "Sector") 
+sectors_cum_return_wide <- sectors_cum_return %>% dplyr:::select(date, Returns, Sector) %>% spread(key = "Sector", value = "Returns")
+sectors_cum_return_nona <- impute_missing_returns(sectors_cum_return_wide, impute_returns_method = "Drawn_Distribution_Collective")
+xts_alsi_return <- sectors_cum_return_nona %>%  tbl_xts() 
 
-xts_swix_return_loadshed <- swix_loadshed %>% tbl_xts(., cols_to_xts = "Returns", spread_by = "Sector") 
-xts_swix_return_no_loadshed <- swix_no_loadshed %>% tbl_xts(., cols_to_xts = "Returns", spread_by = "Sector") 
+alsi_loadshed_wide <- alsi_loadshed %>% dplyr:::select(date, Returns, Sector) %>% spread(key = "Sector", value = "Returns")
+alsi_loadshed_nona <- impute_missing_returns(alsi_loadshed_wide, impute_returns_method = "Drawn_Distribution_Collective")
+xts_alsi_return_loadshed <- alsi_loadshed_nona %>%  tbl_xts()
+
+alsi_no_loadshed_wide <- alsi_no_loadshed %>% dplyr:::select(date, Returns, Sector) %>% spread(key = "Sector", value = "Returns")
+alsi_no_loadshed_nona <- impute_missing_returns(alsi_no_loadshed_wide, impute_returns_method = "Drawn_Distribution_Collective")
+xts_alsi_return_no_loadshed <- alsi_no_loadshed_nona %>%  tbl_xts()
+
+# Get DCC fits
 
 fit.dcc = readRDS(file = "../fit.dcc.rds")
 fit.dcc_ls = readRDS(file = "../fit.dcc_ls.rds")
@@ -138,13 +187,13 @@ RcovList <- rcov(fit.dcc)  # This is now a list of the monthly covariances of ou
 RcovList_ls <- rcov(fit.dcc_ls)
 RcovList_nls <- rcov(fit.dcc_nls)
 
-covmat = matrix(RcovList, nrow(xts_swix_return), ncol(xts_swix_return) * ncol(xts_swix_return), byrow = TRUE)
-covmat_ls = matrix(RcovList, nrow(xts_swix_return_loadshed), ncol(xts_swix_return_loadshed) * ncol(xts_swix_return_loadshed), byrow = TRUE)
-covmat_nls = matrix(RcovList, nrow(xts_swix_return_no_loadshed), ncol(xts_swix_return_no_loadshed) * ncol(xts_swix_return_no_loadshed), byrow = TRUE)
+covmat = matrix(RcovList, nrow(xts_alsi_return), ncol(xts_alsi_return) * ncol(xts_alsi_return), byrow = TRUE)
+covmat_ls = matrix(RcovList, nrow(xts_alsi_return_loadshed), ncol(xts_alsi_return_loadshed) * ncol(xts_alsi_return_loadshed), byrow = TRUE)
+covmat_nls = matrix(RcovList, nrow(xts_alsi_return_no_loadshed), ncol(xts_alsi_return_no_loadshed) * ncol(xts_alsi_return_no_loadshed), byrow = TRUE)
 
-mc1 = MCHdiag(xts_swix_return, covmat)
-mc1_ls = MCHdiag(xts_swix_return_loadshed, covmat_ls)
-mc1_nls = MCHdiag(xts_swix_return_no_loadshed, covmat_nls)
+mc1 = MCHdiag(xts_alsi_return, covmat)
+mc1_ls = MCHdiag(xts_alsi_return_loadshed, covmat_ls)
+mc1_nls = MCHdiag(xts_alsi_return_no_loadshed, covmat_nls)
 
 dcc.time.var.cor <- rcor(fit.dcc)
 dcc.time.var.cor_ls <- rcor(fit.dcc_ls)
@@ -158,26 +207,32 @@ dim(dcc.time.var.cor) <- c(nrow(dcc.time.var.cor), ncol(dcc.time.var.cor)^2)
 dim(dcc.time.var.cor_ls) <- c(nrow(dcc.time.var.cor_ls), ncol(dcc.time.var.cor_ls)^2)
 dim(dcc.time.var.cor_nls) <- c(nrow(dcc.time.var.cor_nls), ncol(dcc.time.var.cor_nls)^2)
 
-dcc.time.var.cor <- renamingdcc(ReturnSeries = xts_swix_return, DCC.TV.Cor = dcc.time.var.cor)
-dcc.time.var.cor_ls <- renamingdcc(ReturnSeries = xts_swix_return_loadshed, DCC.TV.Cor = dcc.time.var.cor_ls)
-dcc.time.var.cor_nls <- renamingdcc(ReturnSeries = xts_swix_return_no_loadshed, DCC.TV.Cor = dcc.time.var.cor_nls)
+dcc.time.var.cor <- renamingdcc(ReturnSeries = xts_alsi_return, DCC.TV.Cor = dcc.time.var.cor)
+dcc.time.var.cor_ls <- renamingdcc(ReturnSeries = xts_alsi_return_loadshed, DCC.TV.Cor = dcc.time.var.cor_ls)
+dcc.time.var.cor_nls <- renamingdcc(ReturnSeries = xts_alsi_return_no_loadshed, DCC.TV.Cor = dcc.time.var.cor_nls)
+
 ```
 
+## Summary Statistics
+
+Summary statistics for the series of daily sector returns are shown in Table \ref{table1}. Resources show the largest average daily return ($\mu =  0.0005$) for the sample period, while Property shows the lowest average daily return ($\mu =  0$). The largest standard deviation belongs to the Resource sector, indicating that it has the largest volatility from a historical and static perspective. The Property sector has both the largest daily drawdown and the largest daily recovery over the sample period, at -19.35\% and 15.49\%. All of the sectors show negatively skewed tails, indicating that large negative returns are more likely than large positive returns for this sample period. Property exhibits a high degree of kurtosis, having its distribution concentrated around the mean. The Jarque-Bera test is used to assess whether the daily returns follow a normal distribution. The significance stars in Table \ref{table1} below indicate that the null hypothesis of normality in the sampled returns is rejected for all sectors at a 1\% significance level.
 
 
-```{r ALSI, warning =  FALSE, fig.align = 'center', fig.cap = "ALSI Weight Contribution \\label{ALSI}", fig.height = 4, fig.width = 7, dev = 'png'}
-weights_plot(T40, "ALSI")
+```{r table1, results='asis'}
+summstat_table <- summary_stats(sectors_cum_return_nona) 
+summstat_table
 ```
 
+## Serial Autocorrelation and ARCH Effects
 
-```{r SWIX, warning =  FALSE, fig.align = 'center', fig.cap = "SWIX Weight Contribution \\label{SWIX}", fig.height = 4, fig.width = 7, dev = 'png'}
-weights_plot(T40, "SWIX")
-```
+The Ljung-Box test is used to examine the data for serial autocorrelation over longer time periods, therefore a lag length of 10 is used. The results in Table \ref{table1} show that the null hypothesis of no autocorrelation can be rejected, requiring autoregressive terms in the mean equations to be fitted on all of the data. To supplement the Ljung-Box test, Figure \ref{LogRet} plots the daily returns. Figure \ref{LogRet} displays periods of volatility clustering, otherwise known as market momentum. This is a strong indication of second order persistence in the time series, pointing to autoregressive conditional heteroskedasticity (ARCH) effects and long memory that require explicit modelling of the variance components. 
 
+@engle LM-GARCH test confirms the presence of ARCH effects in all the series using:
+$$\epsilon_t^2= \beta_0 + (\Sigma_{s = 1}^{10}\beta_s\epsilon_{t-s}^2) + v_t $$. To control for these ARCH effects, @engle showed that it is possible to simultaneously model the mean and variance equations of a series using GARCH models. This technique will be further utilized to extract the time-varying conditional correlations of our time series data.
 
-```{r LogRet,  warning =  FALSE, fig.align = 'center', fig.cap = "Log Returns per Sector for the SWIX \\label{LogRet}", fig.ext = 'png', fig.height = 4, fig.width = 7}
+```{r LogRet,  warning =  FALSE, fig.align = 'center', fig.cap = "Log Returns per Sector for the SWIX \\label{LogRet}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
-log_returns_plot <- sectors_cum_return %>% mutate(Sector = factor(Sector, levels = c("Financials",  "Industrials", "Resources"))) %>% 
+log_returns_plot <- sectors_cum_return %>% mutate(Sector = factor(Sector, levels = c("Financials",  "Industrials", "Property", "Resources"))) %>% 
   ggplot() + geom_line(aes(x = date, y = Returns, colour = Sector, alpha = 1)) + 
 facet_wrap(~Sector, scales = "free_y", nrow = 3) + 
 guides(alpha = "none") + 
@@ -192,57 +247,191 @@ log_returns_plot
 
 ```
 
+## Co-Integration Tests
 
-```{r, results = 'asis'}
-star_fit.dcc <- fit.dcc@mfit$matcoef[rownames(fit.dcc@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE] #%>% data.frame()
+The next step is to test for co-integration in order to motivate the study of the time series conditional correlations. The @johansen1988 co-integration test will be used to confirm whether there is at least one linear long-run relationship among the time series that would yield stationary residuals. The Johansen co-integration test uses a Vector Error Correction Model (VECM) approach with the form:
 
-# \\label{dccfitfull}
+\begin{align}
+  \Delta p_t = \prod p_{t-k} + \Gamma_1 p_{t-1} + \Gamma_2 p_{t-2} + ... + \Gamma_{7} p_{t-7} + \mu + \delta (t) + \theta D_t + \epsilon_t \label{eq1}
+\end{align}
 
-stargazer(star_fit.dcc,
-          type = "text",
-          title = "DCC GARCH Model Fit",
-          ci = TRUE,
-          ci.level = 0.95,
-          p.auto = TRUE,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          align = TRUE)
+where $p_t$ is a $(1 \times 4)$ vector of the daily returns for the sectors at time $t$. The Johansen test centres around the examination of the $\prod$-matrix. The $\prod$-matrix has form $\prod = \alpha \beta^{'}$ where $\beta$ is the $k^{th}$ order co-integrating vector and $\alpha$ is the adjustment parameter. Below the Trace and Maximum Eigenvalue tests are used to consider the rank of the $\prod$-matrix using its eigenvalues. The rank will give an indication of long-run dependence. The Trace statistic tests whether the number of co-integrating vectors of the system is less than or equal to 4, while the Max-Eigenvalue statistic reflects separate tests used on each eigenvalue of the $\prod$-matrix. If the tests indicate that the rank of $\prod$ is statistically likely to be greater than 0, it would imply that there is co-integration and a long-run relationship between the variables. 
+
+The findings from the Trace test is that all relationships are co-integrating at the 1\% significance level. The Eigenvalue test is conducted and confirms this result. This could indicate that the sectors have a common underlying factor that affects their movements. The co-integrating relationship represents correlation between the time series processes in the long term and validates the necessity to study these co-movements. 
+
+```{r eval=FALSE, include=FALSE}
+lag.select <- VARselect(xts_alsi_return, lag.max = 10, type = "const")
+
+ctest1 <- ca.jo(xts_alsi_return, type = "trace", ecdet = "const", K = 10, spec = "transitory")
+
+summary(ctest1)
+```
+
+
+## Unconditional Coerrelation
+
+Table \ref{corrtab} gives the unconditional correlation of returns of the sectors for the entire period as well as for the unconditional correlation for the period where South Africa experienced load-shedding.
+
+These static estimates of historic correlation are often used in practice but have many limitations. The unconditional correlations are limited by the sample period and do not account for any changes. Therefore they do not accurately reflect the relationships between the time series at specific points in time. In this section, it has been observed that the time series data of the sector returns display both first and second order serial autocorrelation. Thus the static estimates of correlation are misleading when the mean persistence and conditional heteroskedasticity is not controlled for. Static estimates of correlation also fail to take into account the dynamic nature of the underlying correlations. In the next section the underlying correlations conditional on past information will be studied.
+
+```{r corrtab, results='asis'}
+corr_mat <- cor(xts_alsi_return)
+
+corr_mat_ls <- cor(xts_alsi_return_loadshed)
+
+corr_mat[upper.tri(corr_mat)] <- corr_mat_ls[upper.tri(corr_mat_ls)]
+
+kable(round(corr_mat,4), caption = "Static Unconditional Correlation \\label{corrtab}") %>% kable_styling(font_size = 9) %>%
+   add_footnote("Note: This table provides correlation for daily returns of the different sectors over the whole period (bottom left) and just the periods of load-shedding (top right).", notation="none") 
+```
+
+
+# Methodology \label{Meth}
+
+## DCC Model
+
+The goal of this study is to examine the dynamic correlations between the Industrial, Financial, Property and Resource sectors of the ALSI as well as to understand how these correlations change over time. To achieve this goal, the DCC (Dynamic Conditional Correlation) model is used. The DCC model is a statistical model that is commonly used to analyse the correlations between multiple time series data. It consists of two components: a GARCH (Generalized Autoregressive Conditional Heteroscedasticity) model, which is used to model the variance of the time series data, and a dynamic conditional correlation model, which is used to model the correlations between the time series.
+
+To estimate the DCC model the maximum likelihood estimation procedure is used. This involves specifying the functional form of the model, including the functional form of the GARCH and dynamic conditional correlation components. Then estimating the parameters of the model that maximize the likelihood of the data given the model. The DCC model has been widely used in the literature to study dynamic correlations in financial markets.
+
+This study will use the sector daily returns, a $1 \times 4$ stochastic vector $\{r_t\}$. The DCC model is specified as follows: 
+
+\begin{align}
+  r_{it} = \mu_{it} + \epsilon_{it} \label{eq2}
+\end{align}
+
+\begin{align}
+  \epsilon_{it} = \sqrt{H_{it}}. \eta_i  \text{  with  } \epsilon_{it} \sim N(0, H_t)  \text{  and  } \eta_i \sim N(0, I) . \label{eq3}
+\end{align}
+
+Where $\mu_t$ is the unconditional AR(1)-mean equation, $\epsilon_t$ the vector of ordinary residuals, $H_t$ the $N \times N$ conditional covariance matrix and $\eta_i$ the standardised residuals. 
+
+Various MV-GARCH models have been proposed to model the covariance process, $H_t$, in Equation \ref{eq3}. The DCC model will be used in this paper which allows the covariance matrix to be separated into different univariate volatility equations and their respective conditional correlations. 
+
+The covariance matrix in the DCC-Model is defined as follows:
+
+\begin{align}
+  H_t = D_tR_tD_t \label{eq4}
+\end{align}
+
+with $D_t = diag(\sqrt{h_{11,t}}...\sqrt{h_{NN,t}})$ and $h_{ii,t}$ taking the functional form of the univariate GARCH model specified. The dynamic conditional correlation structure is then given by the following equation:
+
+\begin{align}
+  Q_{ij,t} = (1 - \theta_1 - \theta_2).\bar{Q} + \theta_1(\epsilon_{i,t-1}\epsilon_{j,t-1}^{'}) + \theta_2(Q_{ij,t-1})  \label{eq5}
+\end{align}
+
+where $Q_{ij,t}$ is the unconditional variance between different series $i$ and $j$, $\bar{Q}$ is the unconditional covariance between the series estimated in the univariate GARCH specification and estimation step. The scalar parameters $\theta_1$ and $\theta_2$ must satisfy both the non negativity assumption $\theta_1 \geq 0$ and $\theta_2 \geq 0$ as well as the assumption that $\theta_1 + \theta_2 < 1$. The second step the requires only the estimate of $\theta_1$ and $\theta_2$ using a likelihood function. Equation \ref{5} expresses the unconditional variance matrix, $Q_{ij,t}$, as a standard GARCH-type equation, so that we can derive the dynamic conditional correlation matrix, $R_t$, between any two series as: 
+
+\begin{align}
+  R_t = Q_{ij,t}^{*-1}. Q_{ij,t}. Q_{ij,t}^{*-1} \label{eq6}
+\end{align}
+
+with $Q_{ij,t}^{*}$ a diagonal matrix with the square root of the diagonal elements of $Q_{ij,t}$ as its entries, such that $Q_{ij,t}^{*} = Diag(Q_t)^{1/2}$. This process can be thought of intuitively as multiplying both sides of Equation \ref{6} by the inverse of Diagonal matrix $D_t$. The dynamic conditional correlation matrix, $R_{ij,t}$ will therefore have entries in the bivariate framework as follows: 
+
+\begin{align}
+  \rho_{ij,t} = \dfrac{q_{ij,t}}{\sqrt{q_{ii,t}.q_{jj,t}}} \\ 
+  = \dfrac{(1 - \theta_1 - \theta_2) \bar{q} + \theta_1 \epsilon_{i,t-1} \epsilon_{j,t-1}^{'} + \theta_2 q_{ij,t-1}}{((1 - \theta_1 - \theta_2)\bar{q_i} + \theta_1     \epsilon_{i,t-1}^2 + \theta_2 q_{ii,t-1}) . ((1 - \theta_1 - \theta_2) \bar{q_{j}} + \theta_1 \epsilon_{j,t-1}^2 + \theta_2 q_{jj,t-1})} \label{eq7}
+\end{align}
+
+Following the methodology of @engle2002, the DCC model is estimated by maximising the log-likelihood function for Equation \ref{eq2} as: 
+
+\begin{align}
+  L(\theta, \phi) = -\dfrac{1}{2} \sum_{t=1}^T (ln(2\pi) + ln(\left|D_tR_tD_t\right|) + \epsilon_t^{'}(D_tR_tD_t)^{-1}\epsilon_t)  \label{eq8}
+\end{align}
+
+and using the fact that $H_t = D_tR_tD_t$, Equation \ref{eq8} can be simplified as:
+
+\begin{align}
+  L(\theta, \phi) = -\dfrac{T}{2} ln(2\pi) - \dfrac{1}{2} . \sum_{t=1}^T (2 . ln \left| D_t \right| + \epsilon_t^{'} (D_tD_t)^{-1} \epsilon_t) - \dfrac{1}{2}\sum_{t=1}^T (ln\left| R_t \right| + \epsilon_t^{'} (R_t^{-1}) \epsilon_t)  \label{eq9}
+\end{align}
+
+The second step is then to maximise the correlation part by using the maximised value in the equation above to solve:
+
+\begin{align}
+  L_C(\theta, \phi) = -\dfrac{1}{2}\sum_{t=1}^T (ln\left| R_t \right| + \epsilon_t^{'} (R_t^{-1}) \epsilon_t) \label{eq10}
+\end{align}
+
+The two-stage DCC estimation procedure outlined above has parameter estimates that are both consistent and asymptotically normal. @cappiello2006asymmetric find a clear limitation of the DDC, that the dynamics of the conditional correlation do not account for asymmetric effects. This means that although the model accounts for the magnitude of past shocks’ impact on future conditional volatility and correlation, it does not differentiate between positive and negative shock effects. This limitation will not be resolved in this study. \footnote{In order to account for these effects the Asymmetric Dynamic Conditional Correlation (ADCC) was created, for more information follow @cappiello2006asymmetric or @engle1995multivariate}
+
+After the GARCH model is fit at a univariate level, the dynamic conditional correlation series will be fit for each bi-variate relationship. This dynamic structure of the returns of each sector pair of Resources, Financials, Property and Industrials will be explored further.
+
+## Univariate Specification
+
+The first stage in building the DCC model framework consists of fitting univariate GARCH specifications to each series of returns. The univariate GARCH model fit on the data is the GJR-GARCH [glosten1993relation]. Table \ref{table:univar} below contains the chosen univariate GJR-GARCH fit.
+
+The Univariate GARCH model includes: 
+
+Mean equation:
+\begin{align}
+  r_t = \mu + a_1. r_{t-1} + \epsilon_t  \label{eq11}
+\end{align}
+
+Volatility equation:
+
+\begin{align}
+  \epsilon_t = \sqrt{h_t}.\eta_t, \quad \text{where} \eta_t \sim N(0,1)  \label{eq12}
+\end{align}
+
+where $r_t$ is the daily return for a sector at time $t$, $\mu$ is the unconditional mean of the time series and $a_1$ is the coefficient for the autoregressive term in the mean equation. The conditional variance at time $t$, $h_t$, is modeled as a function of the variance at previous time periods and the error term at previous time periods. The random error term, $\epsilon_t$, is multiplied by the square root of the conditional variance to ensure that the variance is always positive. The standardized error term, $\eta_t$, has a mean of 0 and a standard deviation of 1. Equation \ref{eq12} specifies the relationship between the error term $\epsilon_t$ and the conditional variance $h_t$. 
+
+The GJR-GARCH model is a variant of the GARCH model that can effectively capture fat tails, excess kurtosis, and leverage effects, allowing for more flexibility in modeling the time-varying variance. In the GJR-GARCH(1,1) model, the variance at time $t$ is modelled as:
+
+\begin{align}
+  h_t^2 = \beta_0 + \beta_1( |\epsilon_{t-1}| - \gamma \epsilon_{t-1})^2 + \beta_2 h_{t-1}^2  \label{eq13}
+\end{align}
+
+This model combines elements of both the ARCH and GARCH models, and different model specifications can be obtained by varying the parameters $\gamma$ and $\beta_1$. For example, setting $\gamma = 0$ results in a GARCH model. 
+
+The parameter $\gamma$ in GJR-GARCH model reflects the leverage effect, which refers to the phenomenon where the magnitude of the response of the variance to a shock depends on the sign of the shock. A positive value of $\gamma$ indicates that negative shocks tend to have a larger impact on the variance than positive shocks of the same magnitude, while a negative value of $\gamma$ indicates the opposite. This model specifications allow the GJR-GARCH model to capture different responses of the variance to positive and negative shocks, which can be important for accurately modelling time series data that exhibits asymmetry.
+
+Table \ref{univar} shows that the returns series for all sectors display strong persistence in volatility and both ARCH and GARCH effects, as measured by $(\alpha_1 + \beta_2 )$. This indicates volatility clustering. The statistical significance of the $\beta_2$ parameter for all sectors in the GJF-GARCH model indicates a strong presence of conditional heteroskedasticity. This is consistent with the results of @engle LM-GARCH test run in section \ref{Data} and confirms the presence of ARCH effects. This further suggests that the static measures of return correlations between sector returns in the last section are not reliable.
+
+The main takeaway from Table \ref{univar} comes from the $\alpha_1$ and $\beta_2$ parameters, which can be used to assess the persistence of volatility in the time series. $\alpha_1$ measures the contribution of past shocks to the current variance, while $\beta_1$ measures the contribution of the past variance to the current variance. A positive value of $\alpha_1$ indicates that positive shocks tend to be followed by more volatility than negative shocks of a similar magnitude, while a negative value of $\alpha_1$ indicates the opposite. Table \ref{univar} shows that Financials and Industrials have a negative value for $\alpha_1$ indicating an asymmetry where negative shocks have a larger impact on volatility than positive shocks. Property and Resources both have positive values for $\alpha_1$. Similarly, a positive value of $\beta_2$ indicates that high levels of volatility tend to persist over time, while a negative value of $\beta_2$ indicates that high levels of volatility tend to dissipate over time. All sectors have a significant and positive $\beta_2$. All sectors also have a positive and significant $\gamma$ indicating that negative shocks tend to have a larger impact on the variance than positive shocks of the same magnitude.
+
+To estimate the time-varying DCC model, the next step is to extract the standardized residuals from the estimated GJR GARCH model and maximize the log-likelihood function. This allows for the estimation of the time-varying conditional correlations between the sectors of the ALSI.
+
+```{r univar, results='asis'}
+coef_output <- list()
+coef_output_pval <- list()
+
+for (p in 1:length(colnames(xts_alsi_return))) { 
+  
+    garchfit = ugarchspec(
+      variance.model = list(model = "gjrGARCH", garchOrder = c(1, 1)), mean.model = list(armaOrder = c(1, 0), include.mean = TRUE), 
+      distribution.model = c("norm", "snorm", "std", "sstd", "ged", "sged", "nig", "ghyp", "jsu")[4])
+  
+    garchfit1 = ugarchfit(spec = garchfit, data=as.numeric(xts_alsi_return[,p])) 
+  
+    coef_output[[p]] = garchfit1@fit$matcoef[,1] 
+    coef_output_pval[[p]] = garchfit1@fit$matcoef[,4] 
+}
+
+coef_table <-  cbind(c("Financials", "",  "Industrials", "", "Property", "", "Resources", "") , bind_rows(coef_output[[1]], coef_output_pval[[1]], coef_output[[2]], coef_output_pval[[2]], coef_output[[3]], coef_output_pval[[3]], coef_output[[4]], coef_output_pval[[4]]))
+
+coef_table_plot <- coef_table %>%
+  kable(col.names = c("Sector", "$a_0$", "$a_1$", "$\\beta_0$", "$\\beta_1$", "$\\beta_2$", "$\\gamma$", "Skewness", "Shape"), escape = FALSE, digits = 4, caption = "Univariate GJR GARCH Coefficients \\label{univar}") %>% kable_styling(latex_options = c("HOLD_position", "scale_down"), protect_latex = TRUE) %>% 
+   add_footnote("Note: This table provides the univariate GJR GARCH model coefficients with the p-values underneath.", notation="none") 
+
+coef_table_plot
+```
+
+
+# Results
+
+In order to understand the dynamics within the cryptocurrency market, the results of both the Go-GARCH and DCC models are analyzed. The Go-GARCH model considers the influence of past innovations of each time series on its own conditional variance, as well as the effect of past innovations of other time series on the variance of the target time series. This model captures the direct impact of one time series on the variance of another. On the other hand, the DCC model separates the variance and the correlation structure into two distinct components: the GARCH component, which models the variance of each time series, and the dynamic conditional correlation component, which models the correlations between the time series. This allows the DCC model to capture both the direct and indirect effects of one time series on the variance of another time series. Additionally, the DCC model allows for the dynamic correlations between time series to vary over time, while the Go-GARCH model assumes that the correlations are constant.
+
+## Whole Period
+
+```{r dccfitw, results='asis'}
+star_fit.dcc <- round(fit.dcc@mfit$matcoef[rownames(fit.dcc@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE], 4) #%>% data.frame()
+
+star_fit.dcc %>% kable(caption = "..... \\label{dccfitw}")%>% kable_styling(font_size = 9) %>% 
+  add_footnote("Note: This table displays the fit of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the full period of this study.", notation="none") 
 
 ```
 
 
-```{r, results = 'asis' }
-star_fit.dcc_ls <- fit.dcc_ls@mfit$matcoef[rownames(fit.dcc_ls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE]
-
-# \\label{dccfitls}
-
-stargazer(star_fit.dcc_ls,
-          type = "text",
-          title = "Loadshedding DCC GARCH Model Fit",
-          ci = TRUE,
-          ci.level = 0.95,
-          p.auto = TRUE,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          align = TRUE) 
-```
-
-
-```{r, results = 'asis'}
-star_fit.dcc_nls <- fit.dcc_nls@mfit$matcoef[rownames(fit.dcc_nls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE]
-
-# \\label{dccfitnls}
-
-stargazer(star_fit.dcc_nls,
-          type = "text",
-          title = "No Loadshedding DCC GARCH Model Fit",
-          ci = TRUE,
-          ci.level = 0.95,
-          p.auto = TRUE,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          align = TRUE)
-```
-
-
-```{r DCCfullr,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Resources \\label{DCCfullr}", fig.ext = 'png', fig.height = 4, fig.width = 7}
+```{r DCCfullr,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Resources \\label{DCCfullr}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
 dcc.time.var.cor_r_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Resources_", Pairs), !grepl("_Resources", Pairs))) + 
   geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
@@ -250,67 +439,124 @@ dcc.time.var.cor_r_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Resources_"
   #ggtitle("Dynamic Conditional Correlations: Resources") + 
   scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
   annotate("text", 
-           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2022-02-01")), 
-           y = -0.3, 
-           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5"),
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
+           y = -0.15, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
            angle = 90) +
   xlab("") +
   geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
   geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
   geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
   geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
-
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-2-01"), xmax = as.Date("2022-4-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-6-01"), xmax = as.Date("2022-12-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+  
 dcc.time.var.cor_r_plot
 
 ```
 
 
-```{r DCCfullf,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Financials \\label{DCCfullf}", fig.ext = 'png', fig.height = 4, fig.width = 7}
+```{r DCCfullf,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Financials \\label{DCCfullf}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
 dcc.time.var.cor_f_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Financials_", Pairs), !grepl("_Financials", Pairs))) + 
   geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
   theme_hc() + 
-  ggtitle("Dynamic Conditional Correlations: Financials") +
+  #ggtitle("Dynamic Conditional Correlations: Financials") +
   scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
   annotate("text", 
-           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2022-02-01")), 
-           y = -0.3, 
-           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5"),
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
+           y = -0.11, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
            angle = 90) +
   xlab("") +
   geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
   geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
   geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
   geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-2-01"), xmax = as.Date("2022-4-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-6-01"), xmax = as.Date("2022-12-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
 
 dcc.time.var.cor_f_plot
 
 ```
 
 
-```{r DCCfulli,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Industrials \\label{DCCfulli}", fig.ext = 'png', fig.height = 4, fig.width = 7}
+```{r DCCfulli,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Industrials \\label{DCCfulli}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
 dcc.time.var.cor_i_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Industrials_", Pairs), !grepl("_Industrials", Pairs))) + 
   geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
   theme_hc() + 
-  ggtitle("Dynamic Conditional Correlations: Industrials") +
+  #ggtitle("Dynamic Conditional Correlations: Industrials") +
   scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
   annotate("text", 
-           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2022-02-01")), 
-           y = -0.1, 
-           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5"),
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
+           y = 0, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
            angle = 90) +
   xlab("") +
   geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
   geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
   geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
   geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-2-01"), xmax = as.Date("2022-4-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-6-01"), xmax = as.Date("2022-12-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
 
 dcc.time.var.cor_i_plot
 
+```
+
+
+```{r DCCfullp,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Property \\label{DCCfullp}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+dcc.time.var.cor_p_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Property_", Pairs), !grepl("_Property", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  #ggtitle("Dynamic Conditional Correlations: Property") +
+  scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
+  annotate("text", 
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
+           y = 0, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
+           angle = 90) +
+  xlab("") +
+  geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
+  geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
+  geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-2-01"), xmax = as.Date("2022-4-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-6-01"), xmax = as.Date("2022-12-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+
+dcc.time.var.cor_p_plot
+
+```
+
+
+
+```{r, results='asis'}
+dccsummstat <- dcc.time.var.cor %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Financials_Property, Industrials_Resources, Industrials_Property, Resources_Property)) %>% 
+  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4)
+
+colnames(dccsummstat) <- c("Financials -> Industrials", "Financials -> Resources", "Financials -> Property", "Industrials -> Resources", "Industrials -> Property", "Resources -> Property")
+round(dccsummstat,4) %>%  t() %>% 
+  kable() %>%
+  kable_styling(font_size = 9) %>%
+  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the entire period of this study.", notation="none")
+
+```
+
+
+
+## Load Shedding Period
+
+```{r, results='asis'}
+star_fit.dcc_ls <- round(fit.dcc_ls@mfit$matcoef[rownames(fit.dcc_ls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE],4)
+
+star_fit.dcc_ls %>% kable()%>% kable_styling(font_size = 9) %>% 
+  add_footnote("Note: This table displays the fit of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the periods that encounter loadshedding in this study.", notation="none")
 ```
 
 
@@ -320,20 +566,95 @@ dcc.time.var.cor_ls <- dcc.time.var.cor_ls %>% mutate(Period = case_when(date >=
                               date >= "2019-12-01" & date <= "2020-3-31" ~ "Period 3",
                               date >= "2021-3-01" & date <= "2021-6-30" ~ "Period 4",
                               date >= "2021-9-01" & date <= "2021-11-30" ~ "Period 5",
-                              date >= "2022-2-01" & date <= "2022-4-30" ~ "Period 6"))
+                              date >= "2022-2-01" & date <= "2022-4-30" ~ "Period 6",
+                              date >= "2022-06-01" & date <= "2022-12-31" ~ "Period 7"))
 ```
 
 
+```{r DCClsr,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Resources  \\label{DCClsr}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+dcc.time.var.cor_ls_r_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Resources_", Pairs), !grepl("_Resources", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  #ggtitle("Dynamic Conditional Correlations: Resources", subtitle = "Periods of Loadshedding") +
+  facet_grid(~Period, scales = "free_x", space = "free_x") +
+  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
+  theme(axis.text = element_text(size = 7)) +
+  xlab("") 
+  
+
+dcc.time.var.cor_ls_r_plot
+
+```
 
 
+```{r DCClsi,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Industrials g \\label{DCClsi}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+dcc.time.var.cor_ls_i_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Industrials_", Pairs), !grepl("_Industrials", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  #ggtitle("Dynamic Conditional Correlations: Industrials", subtitle = "Periods of Loadshedding") +
+  facet_grid(~Period, scales = "free_x", space = "free_x") +
+  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
+  theme(axis.text = element_text(size = 7)) +
+  xlab("") 
+  
+
+dcc.time.var.cor_ls_i_plot
+
+```
 
 
-# Methodology \label{Meth}
+```{r DCClsf,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Financials \\label{DCClsf}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+dcc.time.var.cor_ls_f_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Financials_", Pairs), !grepl("_Financials", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  #ggtitle("Dynamic Conditional Correlations: Financials", subtitle = "Periods of Loadshedding") +
+  facet_grid(~Period, scales = "free_x", space = "free_x") +
+  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
+  theme(axis.text = element_text(size = 7)) +
+  xlab("") 
+  
+
+dcc.time.var.cor_ls_f_plot
+
+```
 
 
+```{r DCClsp,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Property  \\label{DCClsp}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
-# Results
+dcc.time.var.cor_ls_p_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Property_", Pairs), !grepl("_Property", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  #ggtitle("Dynamic Conditional Correlations: Property", subtitle = "Periods of Loadshedding") +
+  facet_grid(~Period, scales = "free_x", space = "free_x") +
+  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
+  theme(axis.text = element_text(size = 7)) +
+  xlab("") 
+  
 
+dcc.time.var.cor_ls_p_plot
+
+```
+
+
+```{r, results='asis'}
+
+dccsummstat_ls <- dcc.time.var.cor_ls %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Financials_Property, Industrials_Resources, Industrials_Property, Resources_Property)) %>% 
+  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4)
+
+colnames(dccsummstat_ls) <- c("Financials -> Industrials", "Financials -> Resources", "Financials -> Property", "Industrials -> Resources", "Industrials -> Property", "Resources -> Property")
+round(dccsummstat_ls,4) %>%  t() %>% 
+  kable() %>%
+  kable_styling(font_size = 9) %>%
+  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the periods that encounter loadshedding in this study.", notation="none")
+```
+
+The results from the Dynamic Conditional Correlations (DCC) model show that the volatility of cryptocurrencies exhibits strong co-movements, as observed in the Table \ref{table:descdcc} and illustrated in the Figure \ref{fig:btcdcc}. The DCC model, which extracts the underlying process and removes noise from the data, reveals lower correlations compared to the static correlations presented in section \ref{unconcorr}. The minimum and maximum values of the correlations tend to occur during times of endogenous and exogenous shocks to the cryptocurrency market. This suggests that the cryptocurrency market is highly interconnected and exhibits volatility clustering, as found in section \ref{volclust}.
+
+
+When examining the dynamic correlations between Bitcoin and the stablecoins Dai and Tether in Figure \ref{fig:btcdcc}, it is clear that the co-movements between these assets are relatively low. This highlights the utility of stablecoins in reducing volatility in the cryptocurrency market, as they offer an on-chain source of a safe-haven asset. This allows investors to remain in the cryptocurrency market while avoiding significant volatility. However, the graph also shows that there are periods of increased co-movements between stablecoins and other cryptocurrencies, particularly during times of high volatility caused by exogenous or endogenous shocks. This suggests that stablecoins, while mostly uncorrelated with the rest of the cryptocurrency market, do exhibit some degree of similarity in terms of volatility. This could be due to the fact that stablecoins are seen as safe-haven assets and therefore tend to experience similar movements in times of risk-on and risk-off sentiment. 
 
 \hfill
 
@@ -354,9 +675,26 @@ dcc.time.var.cor_ls <- dcc.time.var.cor_ls %>% mutate(Period = case_when(date >=
 
 # Appendix {.unnumbered}
 
-## Appendix A {.unnumbered}
+## No Loadshedding Results
 
-Some appendix information here
+```{r, results='asis'}
+star_fit.dcc_nls <- round(fit.dcc_nls@mfit$matcoef[rownames(fit.dcc_nls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE],4)
 
-## Appendix B {.unnumbered}
+star_fit.dcc_nls %>% kable()%>% kable_styling(font_size = 9) %>% 
+  add_footnote("Note: This table displays the fit of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the periods that do not encounter loadshedding in this study.", notation="none")
+```
+
+
+```{r, results='asis'}
+
+dccsummstat_nls <- dcc.time.var.cor_nls %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Financials_Property, Industrials_Resources, Industrials_Property, Resources_Property)) %>% 
+  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4)
+
+colnames(dccsummstat_nls) <- c("Financials -> Industrials", "Financials -> Resources", "Financials -> Property", "Industrials -> Resources", "Industrials -> Property", "Resources -> Property")
+round(dccsummstat_nls,4) %>%  t() %>% 
+  kable() %>%
+  kable_styling(font_size = 9) %>%
+  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the periods that do not encounter loadshedding in this study.", notation="none")
+```
+
 

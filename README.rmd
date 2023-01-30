@@ -10,12 +10,12 @@ always_allow_html: yes
 
 This README is here to describe my analysis with the accompanying code. 
 
-This analysis will look at the dynamic conditional correlations of the sector returns of the SWIX. The time period will start at January 1 2014 and end at the most recent date October 29 2021. The data will then be subset for the month periods that South Africa experienced loadshedding. The aim of this paper is to see if there is a difference in sector dynamics between the Financials, Industrials and Resources for the SWIX. The DCC-GARCH model will be used to model the dynamic correlation structure of these returns during these periods of loadshedding and allow us to study the impact of loadshedding on the market. 
+This analysis will look at the dynamic conditional correlations of the sector returns of the ALSI The time period will start at January 1 2014 and end at the most recent date October 31 2022. The data will then be subset for the month periods that South Africa experienced loadshedding. The aim of this paper is to see if there is a difference in sector dynamics between the Financials, Industrials, Property, and Resources for the ALSI. The DCC-GARCH model will be used to model the dynamic correlation structure of these returns during these periods of loadshedding and allow us to study the impact of loadshedding on the market. 
 
 First we will load necessary packages and source our code files. 
 
 ```{r}
-pacman::p_load(modelsummary, gt, knitr, kableExtra, tidyverse, lubridate, tinytex, rmarkdown, crypto2, quantmod, MTS, rmgarch, rugarch, tbl2xts, fmxdat, ggthemes, summarytools, vars, tseries, pander, cowplot, qpcR, tidyquant, stargazer, data.table)
+pacman::p_load(modelsummary, gt, knitr, kableExtra, tidyverse, lubridate, tinytex, rmarkdown, crypto2, quantmod, MTS, rmgarch, rugarch, tbl2xts, fmxdat, ggthemes, summarytools, vars, tseries, pander, cowplot, qpcR, tidyquant, stargazer, data.table, xtable)
 
 
 list.files('code/', full.names = T, recursive = T) %>% as.list() %>% walk(~source(.))
@@ -32,90 +32,59 @@ Texevier::create_template(directory = glue::glue("{CHOSEN_LOCATION}"), template_
 
 # Get Data
 
-First I get the tickers for the top 40 from the data given for the practical exam. I then use these tickers to pull data more recent data using the tidyquant package. The ticker names have to be cleaned and some errors are fixed to get as much data as possible. This is calling the tq_get() function on the cleaned ticker values from the top 40. There are tickers that data was not received for. These tickers either have names that have been changed or their tickers do not correspond to the tickers that are retrieved through tidyquant from Yahoo Finance. I then manually change these ticker names and pull the data again. 
+```{r}
+ALSI <- read_rds("data/Alsi_Returns.rds")
 
-```{r eval=FALSE, echo=TRUE}
+ALSIsel <- ALSI %>% dplyr::select(date, Tickers, Return, J200, Sector)
 
-T40 <- read_rds("data/T40.rds")
+ALSI_df <- ALSIsel %>% filter(!is.na(J200)) %>% filter(date>= "2014-01-01")
 
-T40 %>% pull(date) %>%  max()
+sectors <- ALSI_df %>% pull(Sector) %>% unique()
 
-unique_tickers <- T40 %>% pull(Tickers) %>% unique() %>% data.frame()
-colnames(unique_tickers) <- "tick"
+sector_return <- list()
+for(i in 1:length(sectors)){
+    # Loop through sectors and calculate returns and cumulative returns
+    sector_return[[i]] <- portfolio_return_function_alsi(ALSI_df, sector = sectors[i]) %>% 
+      mutate(cumreturn_Rand = (cumprod(1 + Returns))) %>% # Start at 1
+      mutate(cumreturn_Rand = cumreturn_Rand/dplyr:::first(cumreturn_Rand)) %>% 
+      mutate(Sector = sectors[i])
+}
 
-unique_tickers_clean <- unique_tickers %>% mutate(Tickers = gsub(" SJ Equity", ".JO", tick)) %>% pull(Tickers)
+# Rename tibbles
+names(sector_return) <- sectors
 
-# Download historical data for tickers for the JSE into R
-# stock_data <- tq_get(unique_tickers_clean, from = "2014-01-01", to = "2022-12-31", get = "stock.prices", quiet = TRUE)
-
-# stock_data_tickers <- stock_data %>% pull(symbol) %>% unique()
-
-# unique_tickers_clean[!unique_tickers_clean %in% stock_data_tickers] 
-
-# BHP.JO = BHG.JO
-# SAB.JO = SZK.JO
-# ITU.JO = ITE.JO
-# IPL.JO = 
-# LGL.JO = 
-# LON.JO = 
-# MND.JO = GND.JO
-# REI.JO = 
-# LBH.JO = LBR.JO
-# MSM.JO = 
-# ASR.JO = ADR.JO
-# MDC.JO = 
-# PSG.JO = KST.JO
-# NEP.JO = 
-# NHM.JO =
-
+# Combine Dataframes
+sectors_cum_return <- rbind(sector_return[[1]], sector_return[[2]], sector_return[[3]], sector_return[[4]]) %>% arrange(date)
 ```
 
-Here I have appended the missing tickers that I found. I get the data daily from 1 January 2014 to 31 December 2022. These dates were chosen as they correspond to periods with loadshedding. I then get the sectors of the Stocks and add the sectors of the changed variables. 
+Below we look at the different cumulative returns of the ALSI for its respective sectors. We observe that the Resources have seen the largest cumulative growth of all sectors. Property have seen minimal cumulative growth, being largely affected by the Covid-19 Pandemic in 2020.
 
-```{r eval=FALSE, echo=TRUE}
-unique_tickers_clean <- c(unique_tickers_clean, "BHG.JO", "SZK.JO", "ITE.JO", "GND.JO", "LBR.JO", "ADR.JO", "KST.JO")
-
-stock_data <- tq_get(unique_tickers_clean, from = "2014-01-01", to = "2022-12-31", get = "stock.prices", quiet = TRUE)
-
-stock_data %>% pull(symbol) %>% unique
-
-stock_data <- stock_data %>% dplyr::select(symbol, date, close)
-colnames(stock_data) <- c("Tickers", "date", "close")
-
-stocks_sectors <- left_join(x = stock_data, y = T40 %>% dplyr:::select(Tickers, Sector) %>% unique %>% mutate(Tickers = gsub(" SJ Equity", ".JO", Tickers)))
-
-
-# Add the sector to the changed variables
-stocks_sectors <- stocks_sectors %>% 
-    mutate(Sector = case_when(Tickers == "BHG.JO" & is.na(Sector) ~ "Resources",
-                              Tickers == "SZK.JO" & is.na(Sector) ~ "Industrials",
-                              Tickers == "ITE.JO" & is.na(Sector) ~ "Financials",
-                              Tickers == "GND.JO" & is.na(Sector) ~ "Resources",
-                              Tickers == "LBR.JO" & is.na(Sector) ~ "Financials",
-                              Tickers == "ADR.JO" & is.na(Sector) ~ "Resources",
-                              Tickers == "KST.JO" & is.na(Sector) ~ "Financials",
-                              TRUE ~ Sector))
-
-#adr.jo <- stocks_sectors %>% filter(Tickers %in% "ADR.JO") %>% arrange(date) %>% unique
-#gnd.jo <- stocks_sectors %>% filter(Tickers %in% "GND.JO") %>% arrange(date) %>% unique
-
-stocks_sectors <- stocks_sectors %>% 
-  group_by(Tickers, Sector) %>% 
-  filter(!any(Tickers == "REM.JO" & Sector == "Financials")) %>% 
-  filter(!any(Tickers == "MNP.JO" & Sector == "Industrials")) 
-#%>% 
- # filter(!any(Tickers == "ADR.JO")) %>% 
-  #filter(!any(Tickers == "GND.JO")) 
-
-#stocks_sectors <- rbind(stocks_sectors, adr.jo, gnd.jo)
-
-# length(stocks_sectors$Tickers) -length(stocks_sectors %>% distinct(Tickers, date, .keep_all = TRUE) %>% pull(Tickers))
-
-stocks_sectors <- stocks_sectors %>% distinct(Tickers, date, .keep_all = TRUE)
-
+```{r}
+sectors_cum_return_plot <- sectors_cum_return %>% 
+  ggplot() +
+  geom_line(aes(date, cumreturn_Rand, colour = Sector), alpha = 0.8) + 
+  #facet_wrap(~Sector) + 
+  fmxdat::fmx_cols() + 
+  labs(title = "Cumulative Returns per Sector for ALSI", y = "Cumulative Returns", x = "") + 
+  fmxdat::theme_fmx(title.size = ggpts(25))
+sectors_cum_return_plot
 ```
+
+```{r}
+sectors_cum_return_plot_facet <- sectors_cum_return %>% 
+  ggplot() +
+  geom_line(aes(date, cumreturn_Rand, colour = Sector), alpha = 0.8) + 
+  facet_wrap(~Sector) + 
+  fmxdat::fmx_cols() + 
+  labs(title = "Cumulative Returns per Sector for ALSI", y = "Cumulative Returns", x = "") + 
+  fmxdat::theme_fmx(title.size = ggpts(25))
+sectors_cum_return_plot_facet
+```
+
+The ALSI sector returns are then stratified into periods of loadshedding and periods without loadshedding. 
 
 I have then used a few sources to identify the periods of loadshedding in South Africa. I have identified periods:
+
 * November 2014 - March of 2015
 * February 2019 - March 2019
 * December 2019 - March 2020
@@ -124,115 +93,8 @@ I have then used a few sources to identify the periods of loadshedding in South 
 * February 2022 - April 2022
 * June 2022 - December 2022
 
-```{r eval=FALSE, echo=TRUE}
-stocks_loadshed <- rbind(
-stocks_sectors %>% filter(date >= "2014-11-01" & date <= "2015-3-31"),
-stocks_sectors %>% filter(date >= "2019-02-01" & date <= "2019-3-31"),
-stocks_sectors %>% filter(date >= "2019-12-01" & date <= "2020-3-31"),
-stocks_sectors %>% filter(date >= "2021-3-01" & date <= "2021-6-30"),
-stocks_sectors %>% filter(date >= "2021-9-01" & date <= "2021-11-30"),
-stocks_sectors %>% filter(date >= "2022-2-01" & date <= "2022-4-30"),
-stocks_sectors %>% filter(date >= "2022-6-01" & date <= "2022-12-31"))
-
-stocks_no_loadshed <- stocks_sectors %>% filter(!date %in% (stocks_loadshed %>% pull(date)))
-```
-
-I then look at the stocks for NA values. There are only 2 stocks with NA values. OML.JO and SOL.JO. OML.JO has 680 missing values out of 1706. The stock has no information after 26 of June 2018. Due to these reasons the stock is removed form the study. 
-
-```{r eval=FALSE, echo=TRUE}
-stocks_no_loadshed %>% group_by(Tickers) %>% summarise(na_count = sum(is.na(close))) %>% filter(na_count>0)
-
-stocks_loadshed <- stocks_loadshed %>% filter(!Tickers %in% "OML.JO")
-stocks_no_loadshed <- stocks_no_loadshed %>% filter(!Tickers %in% "OML.JO")
-```
-
-
-Now I get the returns for all the stocks and impute any missing returns based on the collective distribution.
-
-```{r eval=FALSE, echo=TRUE}
-loadshed_returns <- stocks_loadshed %>% 
-    arrange(date) %>% 
-    group_by(Tickers) %>% 
-    mutate(simpleret = close/ lag(close)) %>% 
-    mutate(dlogret = log(close) - log(lag(close))) %>% 
-    mutate(scaledret = (dlogret - mean(dlogret, na.rm = T))) %>% 
-    filter(date>min(date))
-
-no_loadshed_returns <- stocks_no_loadshed %>% 
-    arrange(date) %>% 
-    group_by(Tickers) %>% 
-    mutate(simpleret = close/ lag(close)) %>% 
-    mutate(dlogret = log(close) - log(lag(close))) %>% 
-    mutate(scaledret = (dlogret - mean(dlogret, na.rm = T))) %>% 
-    filter(date>min(date))
-
-xts_loadshed_return <- loadshed_returns %>% tbl_xts(., cols_to_xts = "dlogret", spread_by = "Tickers")
-xts_no_loadshed_return <- no_loadshed_returns %>% tbl_xts(., cols_to_xts = "dlogret", spread_by = "Tickers")
-
-loadshed_returns <- impute_missing_returns(loadshed_returns, impute_returns_method = "Drawn_Distribution_Collective")
-
-
-stocks_sectors %>% group_by(Tickers) %>% summarise(first_date = min(date))
-
-```
-
-# Doing the analysis with data given during the practical test 
-
-Unfortunately I could not scrape the SWIX portfolio weights for the updated period and have had to use the data given. This leaves us with a slightly smaller sample and also does not include the months of significant loadshedding in 2022. 
-
-```{r}
-T40 <- read_rds("data/T40.rds")
-
-sectors <- T40 %>% pull(Sector) %>% unique()
-sector_return <- list()
-for(i in 1:length(sectors)){
-    # Loop through sectors and calculate returns and cumulative returns
-    sector_return[[i]] <- portfolio_return_function(T40, sector = sectors[i]) %>% group_by(Portfolio) %>% 
-      mutate(cumreturn_Rand = (cumprod(1 + Returns))) %>% # Start at 1
-      mutate(cumreturn_Rand = cumreturn_Rand/dplyr:::first(cumreturn_Rand)) %>% 
-      mutate(Sector = sectors[i])
-}
-# Rename tibbles
-names(sector_return) <- sectors
-# Combine Dataframes
-sectors_cum_return <- rbind(sector_return[[1]], sector_return[[2]], sector_return[[3]]) %>% arrange(date)
-```
-
-Below we look at the different return structure of the ALSI and SWIX for their respective sectors. We observe that the Industrials have seen the largest cumulative growth of all sectors. Resources have seen minimal cumulative growth, with majority of the growth being after 2017. 
-
-```{r}
-sectors_cum_return_plot <- sectors_cum_return %>% 
-    ggplot() +
-    geom_line(aes(date, cumreturn_Rand, colour = Portfolio), alpha = 0.8) + facet_wrap(~Sector) + fmxdat::fmx_cols() + 
-    labs(title = "Cumulative Returns per Sector for ALSI and SWIX", y = "Cumulative Returns", x = "") + 
-    fmxdat::theme_fmx(title.size = ggpts(25))
-sectors_cum_return_plot
-```
-
-## Weights plot
-
-To decide between the ALSI and SWIX I visualise the weight compositions of the indices. 
-
-* ALSI (J200)
-
-```{r}
-weights_plot(T40, "ALSI")
-```
-
-* SWIX (J400)
-
-```{r}
-weights_plot(T40, "SWIX")
-```
-
-From the plots it can be seen that since 2020 the ALSI lowered their weighting of Financial stocks and increased their weighting of resource stocks in comparison to the SWIX. The SWIX also has less volatility in weight contribution. Because of this the SWIX is chosen as the representative portfolio.
-
-The portfolio returns are then stratified into periods of loadshedding and periods without loadshedding. 
-
 ```{r message=FALSE, warning=FALSE}
-sectors_cum_return <- sectors_cum_return %>% filter(Portfolio == 'J400') # SWIX
-
-swix_loadshed <- rbind(
+alsi_loadshed <- rbind(
 sectors_cum_return %>% filter(date >= "2014-11-01" & date <= "2015-3-31"),
 sectors_cum_return %>% filter(date >= "2019-02-01" & date <= "2019-3-31"),
 sectors_cum_return %>% filter(date >= "2019-12-01" & date <= "2020-3-31"),
@@ -241,18 +103,25 @@ sectors_cum_return %>% filter(date >= "2021-9-01" & date <= "2021-11-30"),
 sectors_cum_return %>% filter(date >= "2022-2-01" & date <= "2022-4-30"),
 sectors_cum_return %>% filter(date >= "2022-6-01" & date <= "2022-12-31"))
 
-swix_no_loadshed <- sectors_cum_return %>% filter(!date %in% (swix_loadshed %>% pull(date)))
+alsi_no_loadshed <- sectors_cum_return %>% filter(!date %in% (alsi_loadshed %>% pull(date)))
 
-xts_swix_return <- sectors_cum_return %>% tbl_xts(., cols_to_xts = "Returns", spread_by = "Sector") 
+sectors_cum_return_wide <- sectors_cum_return %>% dplyr:::select(date, Returns, Sector) %>% spread(key = "Sector", value = "Returns")
+sectors_cum_return_nona <- impute_missing_returns(sectors_cum_return_wide, impute_returns_method = "Drawn_Distribution_Collective")
+xts_alsi_return <- sectors_cum_return_nona %>%  tbl_xts() 
 
-xts_swix_return_loadshed <- swix_loadshed %>% tbl_xts(., cols_to_xts = "Returns", spread_by = "Sector") 
-xts_swix_return_no_loadshed <- swix_no_loadshed %>% tbl_xts(., cols_to_xts = "Returns", spread_by = "Sector") 
+alsi_loadshed_wide <- alsi_loadshed %>% dplyr:::select(date, Returns, Sector) %>% spread(key = "Sector", value = "Returns")
+alsi_loadshed_nona <- impute_missing_returns(alsi_loadshed_wide, impute_returns_method = "Drawn_Distribution_Collective")
+xts_alsi_return_loadshed <- alsi_loadshed_nona %>%  tbl_xts()
+
+alsi_no_loadshed_wide <- alsi_no_loadshed %>% dplyr:::select(date, Returns, Sector) %>% spread(key = "Sector", value = "Returns")
+alsi_no_loadshed_nona <- impute_missing_returns(alsi_no_loadshed_wide, impute_returns_method = "Drawn_Distribution_Collective")
+xts_alsi_return_no_loadshed <- alsi_no_loadshed_nona %>%  tbl_xts()
 ```
 
 The Log returns of all sectors across the entire period are the plotted.
 
 ```{r}
-log_returns_plot <- sectors_cum_return %>% mutate(Sector = factor(Sector, levels = c("Financials",  "Industrials", "Resources"))) %>% 
+log_returns_plot <- sectors_cum_return %>% mutate(Sector = factor(Sector, levels = c("Financials",  "Industrials", "Property", "Resources"))) %>% 
   ggplot() + geom_line(aes(x = date, y = Returns, colour = Sector, alpha = 1)) + 
 facet_wrap(~Sector, scales = "free_y", nrow = 3) + 
 guides(alpha = "none") + 
@@ -265,6 +134,53 @@ theme(axis.text = element_text(size = 7))
 
 log_returns_plot
 ```
+
+Unconditional correlation table:
+
+```{r,results='asis'}
+corr_mat <- cor(xts_alsi_return)
+
+corr_mat_ls <- cor(xts_alsi_return_loadshed)
+
+corr_mat[upper.tri(corr_mat)] <- corr_mat_ls[upper.tri(corr_mat_ls)]
+
+kable(round(corr_mat,4)) %>% kable_styling(font_size = 9) %>%
+   add_footnote("Note: This table provides correlation for daily returns of the different sectors over the whole period (bottom left) and just the periods of load-shedding (top right).", notation="none")
+```
+
+
+
+# Fit Univariate model GJR-GARCH
+
+```{r, results='asis'}
+coef_output <- list()
+coef_output_pval <- list()
+
+for (p in 1:length(colnames(xts_alsi_return))) { 
+  
+    garchfit = ugarchspec(
+      variance.model = list(model = "gjrGARCH", garchOrder = c(1, 1)), mean.model = list(armaOrder = c(1, 0), include.mean = TRUE), 
+      distribution.model = c("norm", "snorm", "std", "sstd", "ged", "sged", "nig", "ghyp", "jsu")[4])
+  
+    garchfit1 = ugarchfit(spec = garchfit, data=as.numeric(xts_alsi_return[,p])) 
+  
+    coef_output[[p]] = garchfit1@fit$matcoef[,1] 
+    coef_output_pval[[p]] = garchfit1@fit$matcoef[,4] 
+}
+
+xts_alsi_return[,3]
+
+options(scipen = 999)
+coef_output_pval
+
+
+coef_table <-  cbind(c("Financials", "",  "Industrials", "", "Property", "", "Resources", "") , bind_rows(coef_output[[1]], coef_output_pval[[1]], coef_output[[2]], coef_output_pval[[2]], coef_output[[3]], coef_output_pval[[3]], coef_output[[4]], coef_output_pval[[4]]))
+
+coef_table_plot <- coef_table %>%
+  kable(col.names = c("Sector", "$a_0$", "$a_1$", "$\\beta_0$", "$\\beta_1$", "$\\beta_2$", "$\\gamma$", "Skewness", "Shape"), escape = FALSE, digits = 4) %>% kable_styling(latex_options = c("HOLD_position", "scale_down"), protect_latex = TRUE)
+```
+
+
 
 # Fit DCC models 
 
@@ -280,9 +196,9 @@ The DCC model is then fit over the whole period, the period of loadshedding and 
 uspec <- ugarchspec(variance.model = list(model = "gjrGARCH", garchOrder = c(1, 1)), mean.model = list(armaOrder = c(1, 0), include.mean = TRUE), distribution.model = "sstd")
 # B) Repeat uspec n times. This specification should be
 # self-explanatory...
-multi_univ_garch_spec <- multispec(replicate(ncol(xts_swix_return), uspec))
-multi_univ_garch_spec_ls <- multispec(replicate(ncol(xts_swix_return_loadshed), uspec))
-multi_univ_garch_spec_nls <- multispec(replicate(ncol(xts_swix_return_no_loadshed), uspec))
+multi_univ_garch_spec <- multispec(replicate(ncol(xts_alsi_return), uspec))
+multi_univ_garch_spec_ls <- multispec(replicate(ncol(xts_alsi_return_loadshed), uspec))
+multi_univ_garch_spec_nls <- multispec(replicate(ncol(xts_alsi_return_no_loadshed), uspec))
 
 # Right, so now every series will have a GJR Garch univariate
 # specification. (see ?ugarchspec for other options...)
@@ -299,15 +215,15 @@ cl = makePSOCKcluster(10)
 # Let's now build our DCC models...  ------------------------
 
 # First, fit the univariate series for each column:
-multf = multifit(multi_univ_garch_spec, xts_swix_return, cluster = cl)
-multf_ls = multifit(multi_univ_garch_spec_ls, xts_swix_return_loadshed, cluster = cl)
-multf_nls = multifit(multi_univ_garch_spec_nls, xts_swix_return_no_loadshed, cluster = cl)
+multf = multifit(multi_univ_garch_spec, xts_alsi_return, cluster = cl)
+multf_ls = multifit(multi_univ_garch_spec_ls, xts_alsi_return_loadshed, cluster = cl)
+multf_nls = multifit(multi_univ_garch_spec_nls, xts_alsi_return_no_loadshed, cluster = cl)
 
 # Now we can use multf to estimate the dcc model using our
 # dcc.spec:
-#fit.dcc = dccfit(spec.dcc, data = xts_swix_return, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf)
-#fit.dcc_ls = dccfit(spec.dcc_ls, data = xts_swix_return_loadshed, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf_ls)
-#fit.dcc_nls = dccfit(spec.dcc_nls, data = xts_swix_return_no_loadshed, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf_nls)
+#fit.dcc = dccfit(spec.dcc, data = xts_alsi_return, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf)
+#fit.dcc_ls = dccfit(spec.dcc_ls, data = xts_alsi_return_loadshed, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf_ls)
+#fit.dcc_nls = dccfit(spec.dcc_nls, data = xts_alsi_return_no_loadshed, solver = "gosolnp", cluster = cl, fit.control = list(eval.se = TRUE), fit = multf_nls)
 
 #saveRDS(fit.dcc, file = "fit.dcc.rds")
 #saveRDS(fit.dcc_ls, file = "fit.dcc_ls.rds")
@@ -328,13 +244,13 @@ RcovList <- rcov(fit.dcc)  # This is now a list of the monthly covariances of ou
 RcovList_ls <- rcov(fit.dcc_ls)
 RcovList_nls <- rcov(fit.dcc_nls)
 
-covmat = matrix(RcovList, nrow(xts_swix_return), ncol(xts_swix_return) * ncol(xts_swix_return), byrow = TRUE)
-covmat_ls = matrix(RcovList, nrow(xts_swix_return_loadshed), ncol(xts_swix_return_loadshed) * ncol(xts_swix_return_loadshed), byrow = TRUE)
-covmat_nls = matrix(RcovList, nrow(xts_swix_return_no_loadshed), ncol(xts_swix_return_no_loadshed) * ncol(xts_swix_return_no_loadshed), byrow = TRUE)
+covmat = matrix(RcovList, nrow(xts_alsi_return), ncol(xts_alsi_return) * ncol(xts_alsi_return), byrow = TRUE)
+covmat_ls = matrix(RcovList, nrow(xts_alsi_return_loadshed), ncol(xts_alsi_return_loadshed) * ncol(xts_alsi_return_loadshed), byrow = TRUE)
+covmat_nls = matrix(RcovList, nrow(xts_alsi_return_no_loadshed), ncol(xts_alsi_return_no_loadshed) * ncol(xts_alsi_return_no_loadshed), byrow = TRUE)
 
-mc1 = MCHdiag(xts_swix_return, covmat)
-mc1_ls = MCHdiag(xts_swix_return_loadshed, covmat_ls)
-mc1_nls = MCHdiag(xts_swix_return_no_loadshed, covmat_nls)
+mc1 = MCHdiag(xts_alsi_return, covmat)
+mc1_ls = MCHdiag(xts_alsi_return_loadshed, covmat_ls)
+mc1_nls = MCHdiag(xts_alsi_return_no_loadshed, covmat_nls)
 ```
 
 The results have to be pulled out of the data using the following code. This will also rename our dynamic conditional correlations.
@@ -352,61 +268,35 @@ dim(dcc.time.var.cor) <- c(nrow(dcc.time.var.cor), ncol(dcc.time.var.cor)^2)
 dim(dcc.time.var.cor_ls) <- c(nrow(dcc.time.var.cor_ls), ncol(dcc.time.var.cor_ls)^2)
 dim(dcc.time.var.cor_nls) <- c(nrow(dcc.time.var.cor_nls), ncol(dcc.time.var.cor_nls)^2)
 
-dcc.time.var.cor <- renamingdcc(ReturnSeries = xts_swix_return, DCC.TV.Cor = dcc.time.var.cor)
-dcc.time.var.cor_ls <- renamingdcc(ReturnSeries = xts_swix_return_loadshed, DCC.TV.Cor = dcc.time.var.cor_ls)
-dcc.time.var.cor_nls <- renamingdcc(ReturnSeries = xts_swix_return_no_loadshed, DCC.TV.Cor = dcc.time.var.cor_nls)
+dcc.time.var.cor <- renamingdcc(ReturnSeries = xts_alsi_return, DCC.TV.Cor = dcc.time.var.cor)
+dcc.time.var.cor_ls <- renamingdcc(ReturnSeries = xts_alsi_return_loadshed, DCC.TV.Cor = dcc.time.var.cor_ls)
+dcc.time.var.cor_nls <- renamingdcc(ReturnSeries = xts_alsi_return_no_loadshed, DCC.TV.Cor = dcc.time.var.cor_nls)
 ```
 
 ## Statistics
 
-First we asses the fit of the DCC model on the data. 
+First we assess the fit of the DCC model on the data. 
 
 ```{r, results = 'asis'}
-star_fit.dcc <- fit.dcc@mfit$matcoef[rownames(fit.dcc@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE] #%>% data.frame()
+star_fit.dcc <- round(fit.dcc@mfit$matcoef[rownames(fit.dcc@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE], 4) #%>% data.frame()
 
-# \\label{dccfitfull}
-
-stargazer(star_fit.dcc,
-          type = "text",
-          title = "DCC GARCH Model Fit",
-          ci = TRUE,
-          ci.level = 0.95,
-          p.auto = TRUE,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          align = TRUE)
-
-
+star_fit.dcc %>% kable()%>% kable_styling() %>% 
+  add_footnote("Note: This table displays the fit of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the full period of this study.", notation="none")
 ```
 
 ```{r, results = 'asis' }
-star_fit.dcc_ls <- fit.dcc_ls@mfit$matcoef[rownames(fit.dcc_ls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE]
+star_fit.dcc_ls <- round(fit.dcc_ls@mfit$matcoef[rownames(fit.dcc_ls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE],4)
 
-# \\label{dccfitls}
-
-stargazer(star_fit.dcc_ls,
-          type = "text",
-          title = "Loadshedding DCC GARCH Model Fit",
-          ci = TRUE,
-          ci.level = 0.95,
-          p.auto = TRUE,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          align = TRUE) 
+star_fit.dcc_ls %>% kable()%>% kable_styling() %>% 
+  add_footnote("Note: This table displays the fit of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the periods that encounter loadshedding in this study.", notation="none")
 ```
 
 
 ```{r, results = 'asis'}
-star_fit.dcc_nls <- fit.dcc_nls@mfit$matcoef[rownames(fit.dcc_nls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE]
+star_fit.dcc_nls <- round(fit.dcc_nls@mfit$matcoef[rownames(fit.dcc_nls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE],4)
 
-# \\label{dccfitnls}
-
-stargazer(star_fit.dcc_nls,
-          type = "text",
-          title = "No Loadshedding DCC GARCH Model Fit",
-          ci = TRUE,
-          ci.level = 0.95,
-          p.auto = TRUE,
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          align = TRUE)
+star_fit.dcc_nls %>% kable()%>% kable_styling() %>% 
+  add_footnote("Note: This table displays the fit of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the periods that do not encounter loadshedding in this study.", notation="none")
 ```
 
 
@@ -424,17 +314,19 @@ dcc.time.var.cor_r_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Resources_"
   ggtitle("Dynamic Conditional Correlations: Resources") + 
   scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
   annotate("text", 
-           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2022-02-01")), 
-           y = -0.3, 
-           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5"),
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
+           y = -0.15, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
            angle = 90) +
   xlab("") +
   geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
   geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
   geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
   geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
-
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-2-01"), xmax = as.Date("2022-4-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-6-01"), xmax = as.Date("2022-12-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+                              
 dcc.time.var.cor_r_plot
 ```
 
@@ -445,16 +337,18 @@ dcc.time.var.cor_f_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Financials_
   ggtitle("Dynamic Conditional Correlations: Financials") +
   scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
   annotate("text", 
-           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2022-02-01")), 
-           y = -0.3, 
-           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5"),
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
+           y = -0.11, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
            angle = 90) +
   xlab("") +
   geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
   geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
   geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
   geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-2-01"), xmax = as.Date("2022-4-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-6-01"), xmax = as.Date("2022-12-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
 
 dcc.time.var.cor_f_plot
 ```
@@ -466,18 +360,43 @@ dcc.time.var.cor_i_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Industrials
   ggtitle("Dynamic Conditional Correlations: Industrials") +
   scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
   annotate("text", 
-           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2022-02-01")), 
-           y = -0.1, 
-           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5"),
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
+           y = 0, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
            angle = 90) +
   xlab("") +
   geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
   geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
   geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
   geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-2-01"), xmax = as.Date("2022-4-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-6-01"), xmax = as.Date("2022-12-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
 
 dcc.time.var.cor_i_plot
+```
+
+```{r}
+dcc.time.var.cor_p_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Property_", Pairs), !grepl("_Property", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  ggtitle("Dynamic Conditional Correlations: Property") +
+  scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
+  annotate("text", 
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
+           y = 0, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
+           angle = 90) +
+  xlab("") +
+  geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
+  geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
+  geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-2-01"), xmax = as.Date("2022-4-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-6-01"), xmax = as.Date("2022-12-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+
+dcc.time.var.cor_p_plot
 ```
 
 ### Load Shedding
@@ -490,7 +409,8 @@ dcc.time.var.cor_ls <- dcc.time.var.cor_ls %>% mutate(Period = case_when(date >=
                               date >= "2019-12-01" & date <= "2020-3-31" ~ "Period 3",
                               date >= "2021-3-01" & date <= "2021-6-30" ~ "Period 4",
                               date >= "2021-9-01" & date <= "2021-11-30" ~ "Period 5",
-                              date >= "2022-2-01" & date <= "2022-4-30" ~ "Period 6"))
+                              date >= "2022-2-01" & date <= "2022-4-30" ~ "Period 6",
+                              date >= "2022-06-01" & date <= "2022-12-31" ~ "Period 7"))
 ```
 
 
@@ -501,7 +421,7 @@ dcc.time.var.cor_ls_r_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Resou
   theme_hc() + 
   ggtitle("Dynamic Conditional Correlations: Resources", subtitle = "Periods of Loadshedding") +
   facet_grid(~Period, scales = "free_x", space = "free_x") +
-  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "2 months") + 
+  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
   theme(axis.text = element_text(size = 7)) +
   xlab("") 
   
@@ -515,7 +435,7 @@ dcc.time.var.cor_ls_i_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Indus
   theme_hc() + 
   ggtitle("Dynamic Conditional Correlations: Industrials", subtitle = "Periods of Loadshedding") +
   facet_grid(~Period, scales = "free_x", space = "free_x") +
-  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "2 months") + 
+  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
   theme(axis.text = element_text(size = 7)) +
   xlab("") 
   
@@ -529,7 +449,7 @@ dcc.time.var.cor_ls_f_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Finan
   theme_hc() + 
   ggtitle("Dynamic Conditional Correlations: Financials", subtitle = "Periods of Loadshedding") +
   facet_grid(~Period, scales = "free_x", space = "free_x") +
-  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "2 months") + 
+  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
   theme(axis.text = element_text(size = 7)) +
   xlab("") 
   
@@ -537,87 +457,89 @@ dcc.time.var.cor_ls_f_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Finan
 dcc.time.var.cor_ls_f_plot
 ```
 
-
-
-# Fit the DCC model on the entire period, the period of loadshedding and the period without loadshedding
-
 ```{r}
-DCCPre <- dccPre(xts_swix_return, include.mean = T, p = 0)
+dcc.time.var.cor_ls_p_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Property_", Pairs), !grepl("_Property", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  ggtitle("Dynamic Conditional Correlations: Property", subtitle = "Periods of Loadshedding") +
+  facet_grid(~Period, scales = "free_x", space = "free_x") +
+  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
+  theme(axis.text = element_text(size = 7)) +
+  xlab("") 
+  
+
+dcc.time.var.cor_ls_p_plot
 ```
-
-
-
-```{r}
-# We now have the estimates of volatility for each series. 
-# Follow my lead below in changing the output to a usable Xts series for each column in xts_swix_return_loadshed:
-Vol <- DCCPre$marVol
-colnames(Vol) <- colnames(xts_swix_return)
-Vol <- 
-  data.frame( cbind( date = index(xts_swix_return), Vol)) %>% # Add date column which dropped away...
-  mutate(date = as.Date(date)) %>% tbl_df()  # make date column a date column...
-TidyVol <- Vol %>% gather(Sector, Sigma, -date)
-ggplot(TidyVol) + geom_line(aes(x = date, y = Sigma, colour = Sector))
-```
-
-
 
 
 ## Summary statistics for DCC output
 
 
 ```{r, results = 'asis'}
-dcc.time.var.cor %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Industrials_Resources)) %>% 
-  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4) %>% 
-  kable(col.names = c("Financials -> Industrials", "Financials -> Resources", "Industrials -> Resources")) %>%
-  kable_styling() %>%
-  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the SWIX over the entire period of this study.", notation="none")
+dccsummstat <- dcc.time.var.cor %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Financials_Property, Industrials_Resources, Industrials_Property, Resources_Property)) %>% 
+  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4)
+
+colnames(dccsummstat) <- c("Financials -> Industrials", "Financials -> Resources", "Financials -> Property", "Industrials -> Resources", "Industrials -> Property", "Resources -> Property")
+round(dccsummstat,4) %>%  t() %>% 
+  kable() %>%
+  kable_styling(font_size = 9) %>%
+  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the entire period of this study.", notation="none")
 
 ```
 
 ```{r, results = 'asis'}
-dcc.time.var.cor_ls %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Industrials_Resources)) %>% 
-  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4) %>% 
-  kable(col.names = c("Financials -> Industrials", "Financials -> Resources", "Industrials -> Resources")) %>%
-  kable_styling() %>%
-  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the SWIX over the periods that encounter loadshedding in this study.", notation="none")
+dccsummstat_ls <- dcc.time.var.cor_ls %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Financials_Property, Industrials_Resources, Industrials_Property, Resources_Property)) %>% 
+  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4)
+
+colnames(dccsummstat_ls) <- c("Financials -> Industrials", "Financials -> Resources", "Financials -> Property", "Industrials -> Resources", "Industrials -> Property", "Resources -> Property")
+round(dccsummstat_ls,4) %>%  t() %>% 
+  kable() %>%
+  kable_styling(font_size = 9) %>%
+  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the periods that encounter loadshedding in this study.", notation="none")
 ```
 
 
 ```{r, results = 'asis'}
-dcc.time.var.cor_nls %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Industrials_Resources)) %>% 
-  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4) %>% 
-  kable(col.names = c("Financials -> Industrials", "Financials -> Resources", "Industrials -> Resources")) %>%
-  kable_styling() %>%
-  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the SWIX over the periods that do not encounter loadshedding in this study.", notation="none")
+dccsummstat_nls <- dcc.time.var.cor_nls %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Financials_Property, Industrials_Resources, Industrials_Property, Resources_Property)) %>% 
+  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4)
+
+colnames(dccsummstat_nls) <- c("Financials -> Industrials", "Financials -> Resources", "Financials -> Property", "Industrials -> Resources", "Industrials -> Property", "Resources -> Property")
+round(dccsummstat_nls,4) %>%  t() %>% 
+  kable() %>%
+  kable_styling(font_size = 9) %>%
+  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the periods that do not encounter loadshedding in this study.", notation="none")
 ```
 
 
 
 ```{r, results = 'asis'}
-summstats_all <- xts_swix_return %>% 
+summstats_all <- xts_alsi_return %>% 
   descr(stats = c("mean", "med", "sd", "min", "max", "skewness", "kurtosis", "n.valid"), round.digits = 4, order = c("Financials", "Industrials", "Resources"))
 
 rownames(summstats_all) <- c("Mean", "Median", "Std.Dev", "Min", "Max", "Skewness", "Kurtosis", "Observations" )
 
-summstats_all %>% kable() %>% kable_styling()
+round(summstats_all,4) %>% kable() %>% kable_styling(font_size = 9)
 ```
 
+
+
 ```{r, results = 'asis'}
-summstats_loadshed <- xts_swix_return_loadshed %>% 
-  descr(stats = c("mean", "med", "sd", "min", "max", "skewness", "kurtosis", "n.valid"), round.digits = 4, order = c("Financials", "Industrials", "Resources"))
+summstats_loadshed <- xts_alsi_return_loadshed %>% 
+  descr(stats = c("mean", "med", "sd", "min", "max", "skewness", "kurtosis", "n.valid"), round.digits = 4, order = c("Financials", "Industrials", "Resources", "Property"))
 
 rownames(summstats_loadshed) <- c("Mean", "Median", "Std.Dev", "Min", "Max", "Skewness", "Kurtosis", "Observations" )
 
-summstats_loadshed %>% kable() %>% kable_styling()
+round(summstats_loadshed,4) %>% kable() %>% kable_styling(font_size = 9)
+
 ```
 
 ```{r, results = 'asis'}
-summstats_no_loadshed <- xts_swix_return_no_loadshed %>% 
-  descr(stats = c("mean", "med", "sd", "min", "max", "skewness", "kurtosis", "n.valid"), round.digits = 4, order = c("Financials", "Industrials", "Resources"))
+summstats_no_loadshed <- xts_alsi_return_no_loadshed %>% 
+  descr(stats = c("mean", "med", "sd", "min", "max", "skewness", "kurtosis", "n.valid"), round.digits = 4, order = c("Financials", "Industrials", "Resources", "Property"))
 
 rownames(summstats_no_loadshed) <- c("Mean", "Median", "Std.Dev", "Min", "Max", "Skewness", "Kurtosis", "Observations" )
 
-summstats_no_loadshed %>% kable() %>% kable_styling()
+round(summstats_no_loadshed,4) %>% kable() %>% kable_styling(font_size = 9)
 ```
 
 
