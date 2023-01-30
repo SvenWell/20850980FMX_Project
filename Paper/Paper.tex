@@ -201,11 +201,6 @@ models}
 \address[Add1]{Stellenbosch University, Stellenbosch, South Africa}
 
 
-\begin{abstract}
-\small{
-Abstract
-}
-\end{abstract}
 
 \vspace{1cm}
 
@@ -244,8 +239,166 @@ Abstract
 \section{\texorpdfstring{Introduction
 \label{Introduction}}{Introduction }}\label{introduction}}
 
+Financial markets have become largely interconnected causing a multitude
+of issues for investors trying to diversify investment portfolios. The
+homogeneity of asset price movements across sectors within geographical
+borders has increased. These co-movements are shown to become stronger
+during times of economic uncertainty or after a shock to the system. To
+avoid significant drawdowns many investors diversify their portfolios,
+attempting to limit any loss caused directly to a stock, sector or
+region. Diversification is difficult when the shocks affects a larger
+grouping of financial assets, as witnessed with COVID-19 where investors
+around the world saw a significant portion of their portfolios
+disappear.
+
+This analysis focuses on a country specific systemic shock for South
+Africa. Eskom, South Africa's main power provider, has failed to
+maintain a stable power output that matches the demand of the South
+African population. Thus, Eskom has introduced load-shedding.
+Load-shedding is a scheduled power cut, leaving parts of the population
+without power. Load-shedding has had deep impact on businesses in South
+Africa and this paper looks specifically at how load-shedding has
+affected the diversification properties of different financial sectors
+within South Africa. The dynamic nature of how sectors co-move will be
+observed for times where load-shedding is present and compare that to
+the entire sample.
+
+Firstly, the analysis is conducted with a static view of correlations
+between sectors. Then the time-varying conditional correlations between
+the different sectors will be assessed using the Dynamic Conditional
+Correlation (DCC) Multivariate Autoregressive Conditional
+Heteroskedasticity (MV-GARCH) model proposed by Engle
+(\protect\hyperlink{ref-engle2002}{2002}).
+
+This paper finds that static estimates of correlation between asset
+returns across local economic sectors falls short. Alongside this, the
+dynamic correlations are observed to vary significantly across the
+entire sample period. Load-shedding increases the measures of
+conditional correlation for specific sector pairs and seems to have
+little effect on other sector pairs. In summary this paper looks to give
+investors a better understanding of how the presence of load-shedding
+will affect the diversification structure of the South African financial
+market.
+
 \hypertarget{literature-review}{%
 \section{Literature Review}\label{literature-review}}
+
+First, provide an overview of the DCC model, including its purpose,
+methodology and key assumptions. Discuss the motivations for using a DCC
+model in finance, such as the need to capture the time-varying
+dependence structure between multiple time series. Highlight the key
+features of the GJR specification, and explain how it can effectively
+capture fat tails, excess kurtosis and leverage effects.
+
+To assess the effect of load-shedding on the different sectors of the
+All Share Index (ALSI), the volatility of the time series has to be
+assessed. Modelling and explaining the dynamics of volatility of
+financial time-series starts with Engle
+(\protect\hyperlink{ref-engle}{1982})'s work on the Autoregressive
+Conditional Heteroskedasticity (ARCH) models. These models have
+subsequently improved over the last 3 decades, with the DCC model by
+Engle (\protect\hyperlink{ref-engle2002}{2002}) and the Asymmetric DCC
+model by Cappiello, Engle \& Sheppard
+(\protect\hyperlink{ref-cappiello2006asymmetric}{2006}). These models
+bring statistical benefits by controlling for the second order
+persistence. It will be shown in this study how important it is to not
+just take a static view of correlation and rather model the conditional
+correlation. These models take into account dynamics that previous
+models could not, allowing better decision making for investors.
+MV-GARCH models have garnered attention, followed by a large body of
+literature extending and transforming the models to capture the dynamics
+of the time-series.
+
+The literature on MV-GARCH techniques has focused on the increasing
+interdependence between various financial markets. South Africa is often
+studied as a composite in the dynamics of emerging economies. In this
+context, studies have shown that herding behaviour among investors
+during periods of economic uncertainty can significantly impact the
+linkages between developing countries' capital markets and developed
+economies. For example, Horvath \& Petrovski
+(\protect\hyperlink{ref-horvath2013international}{2013}) used the BEKK
+MV-GARCH model to examine the conditional correlations between main
+sectors in several large economies, including South Africa. Similarly,
+Corsetti, Pericoli \& Sbracia
+(\protect\hyperlink{ref-corsetti2005some}{2005}) and Chiang, Jeon \& Li
+(\protect\hyperlink{ref-chiang2007dynamic}{2007}) utilized the DCC
+MV-GARCH model to examine this issue.
+
+Several studies have also investigated return and volatility
+co-movements between South Africa and other markets. For example,
+Samouilhan (\protect\hyperlink{ref-samouilhan2006}{2006}) used
+univariate volatility models to examine market and sector-level return
+and volatility co-movements between South Africa and the UK stock
+market. Chinzara \& Aziakpono
+(\protect\hyperlink{ref-chinzara2009dynamic}{2009}) used VAR modelling
+techniques and univariate GARCH models to study cross-country
+correlations between South Africa's stock market index and several other
+large global indices. In a similar vein, Chinzara
+(\protect\hyperlink{ref-chinzara2011macroeconomic}{2011}) investigated
+the spillover effects of macroeconomic indicators on the returns of the
+South African stock market index and four sectors (financial, retail,
+mining, and industrial) during crisis periods such as the Asian crisis
+and the financial crisis.
+
+In a separate study, Bonga-Bonga
+(\protect\hyperlink{ref-bonga2018uncovering}{2018}) investigates the
+transmission of financial shocks between South Africa and other members
+of the BRICS grouping during the period 1996-2012. The study utilizes a
+multivariate VAR-DCC-GARCH model and finds evidence of
+cross-transmission and dependence between South Africa and Brazil.
+However, the results suggest that South Africa is more affected by
+crises originating from China, India, and Russia, while these countries
+are least affected by crises originating from South Africa.
+
+Finally, Katzke \& others (\protect\hyperlink{ref-katzke}{2013}) studied
+the dynamics of return co-movements between South Africa's largest
+sectors in order to highlight the potential gains from inter-sector
+diversification for domestic investors. The study utilized both the
+DCC-GARCH and Asymmetric DCC-GARCH models and showed that
+diversification opportunities across sectors are limited during periods
+of elevated market uncertainty.
+
+The literature is focused on periods of market uncertainty and crises.
+South Africa is currently experiencing, and has previously been victim
+of, an energy crisis. The energy crisis is due to a shortfall in
+electricity generation capacity and a lack of investment in the
+country's power infrastructure. Load-shedding is a measure taken by the
+state-owned electricity utility, Eskom, to manage the country's power
+grid and prevent widespread blackouts. Load-shedding is quite a unique
+crisis and thus lacks an abundance of literature, although the effects
+are obviously damaging. However, load-shedding has been implemented in
+Pakistan. Xu, Akhtar, Haris, Muhammad, Abban \& Taghizadeh-Hesary
+(\protect\hyperlink{ref-XU2022100849}{2022}) analyse the impact of an
+energy crisis on the profitability and productivity of 424 non-financial
+listed companies in Pakistan over the period of load-shedding, 2001 to
+2017. The results from this study confirm the negative impact of
+load-shedding on business profitability and productivity Xu \emph{et
+al.} (\protect\hyperlink{ref-XU2022100849}{2022}). The effects of
+load-shedding affect all industries and Siddiqui, Jalil, Nasir, Malik \&
+Khalid (\protect\hyperlink{ref-siddiqui2008cost}{2008}) find that small
+businesses are worst affected.
+
+Kessides (\protect\hyperlink{ref-kessides2013chaos}{2013}) investigate
+the damage that electricity shortages have had on Pakistan's economy.
+Kessides (\protect\hyperlink{ref-kessides2013chaos}{2013}) find that
+load-shedding constrains any economic growth and has significant
+negative shocks on employment, exports and poverty alleviation. The also
+find that the industrial, commercial and agricultural businesses that
+utilise the national power have been crippled from the outages forcing a
+significant reduction in the level of output. The damage from
+load-shedding is significant in electricity-intensive sectors, such as
+the industrial sector. Kessides
+(\protect\hyperlink{ref-kessides2013chaos}{2013}) suggest that the costs
+are split between directs costs such as production lost, spoilage costs,
+process restart costs and damage to machinery, and indirect costs
+arising from adjustments made by firms trying to recover output.
+
+This paper seeks to add to the literature by showing how local energy
+uncertainty influence the dynamics of conditional co-movement between
+the largest domestic economic sectors. The paper provides an interesting
+insight into the ability of domestic investors manage their portfolios
+during periods where the domestic economy is affected by the
+shortcomings of Eskom.
 
 \hypertarget{data}{%
 \section{\texorpdfstring{Data \label{Data}}{Data }}\label{data}}
@@ -566,16 +719,15 @@ maximised value in the equation above to solve:
 \end{align}
 
 The two-stage DCC estimation procedure outlined above has parameter
-estimates that are both consistent and asymptotically normal. Cappiello,
-Engle \& Sheppard
-(\protect\hyperlink{ref-cappiello2006asymmetric}{2006}) find a clear
-limitation of the DDC, that the dynamics of the conditional correlation
-do not account for asymmetric effects. This means that although the
-model accounts for the magnitude of past shocks' impact on future
-conditional volatility and correlation, it does not differentiate
+estimates that are both consistent and asymptotically normal. Cappiello
+\emph{et al.} (\protect\hyperlink{ref-cappiello2006asymmetric}{2006})
+find a clear limitation of the DDC, that the dynamics of the conditional
+correlation do not account for asymmetric effects. This means that
+although the model accounts for the magnitude of past shocks' impact on
+future conditional volatility and correlation, it does not differentiate
 between positive and negative shock effects. This limitation will not be
 resolved in this study.
-\footnote{In order to account for these effects the Asymmetric Dynamic Conditional Correlation (ADCC) was created, for more information follow @cappiello2006asymmetric or @engle1995multivariate}
+\footnote{In order to account for these effects the Asymmetric Dynamic Conditional Correlation (ADCC) was created, for more information follow Capiello \emph{et al.} (2006) or Engle (1995)}
 
 After the GARCH model is fit at a univariate level, the dynamic
 conditional correlation series will be fit for each bi-variate
@@ -589,8 +741,9 @@ further.
 The first stage in building the DCC model framework consists of fitting
 univariate GARCH specifications to each series of returns. The
 univariate GARCH model fit on the data is the GJR-GARCH
-{[}glosten1993relation{]}. Table \ref{table:univar} below contains the
-chosen univariate GJR-GARCH fit.
+(\protect\hyperlink{ref-glosten1993relation}{Glosten, Jagannathan \&
+Runkle, 1993}). Table \ref{univar} below contains the chosen univariate
+GJR-GARCH fit.
 
 The Univariate GARCH model includes:
 
@@ -607,7 +760,7 @@ Volatility equation:
 where \(r_t\) is the daily return for a sector at time \(t\), \(\mu\) is
 the unconditional mean of the time series and \(a_1\) is the coefficient
 for the autoregressive term in the mean equation. The conditional
-variance at time \(t\), \(h_t\), is modeled as a function of the
+variance at time \(t\), \(h_t\), is modelled as a function of the
 variance at previous time periods and the error term at previous time
 periods. The random error term, \(\epsilon_t\), is multiplied by the
 square root of the conditional variance to ensure that the variance is
@@ -618,11 +771,11 @@ variance \(h_t\).
 
 The GJR-GARCH model is a variant of the GARCH model that can effectively
 capture fat tails, excess kurtosis, and leverage effects, allowing for
-more flexibility in modeling the time-varying variance. In the
+more flexibility in modelling the time-varying variance. In the
 GJR-GARCH(1,1) model, the variance at time \(t\) is modelled as:
 
 \begin{align}
-  h_t^2 = \beta_0 + \beta_1( |\epsilon_{t-1}| - \gamma \epsilon_{t-1})^2 + \beta_2 h_{t-1}^2  \label{eq13}
+  h_t = \beta_0 + \beta_1 \epsilon_{t-1}^2 + \gamma . I[\epsilon_{t-1}<0] \circ \epsilon_{t-1}^2 + \beta_2 h_{t-1}  \label{eq13}
 \end{align}
 
 This model combines elements of both the ARCH and GARCH models, and
@@ -717,14 +870,33 @@ dynamic conditional correlation component, which models the correlations
 between the time series. This allows the DCC model to capture both the
 direct and indirect effects of one time series on the variance of
 another time series. Additionally, the DCC model allows for the dynamic
-correlations between time series to vary over time.
+correlations between time series to vary over time. First the results of
+the fit of the DCC model will be assessed for the whole sample period
+and for the period including load-shedding.
 
-\hypertarget{whole-period}{%
-\subsection{Whole Period}\label{whole-period}}
+\hypertarget{dcc-model-fit}{%
+\subsection{DCC Model Fit}\label{dcc-model-fit}}
+
+The main conclusion that can be drawn from the fit of the dynamic
+conditional correlation (DCC) model in Table \ref{dccfitw} is that the
+beta coefficients, which measure the persistence of the correlation
+structure, are all close to 0.9. This indicates that the correlation
+structure between sector returns is relatively persistent over time.
+Additionally, the dcca coefficient, which measures the conditional mean
+of the correlation, is 0.0266 suggests that there is a moderate level of
+dependence between the four sectors. The dccb coefficient, which
+measures the conditional volatility of the correlation, is 0.9515 and
+indicates a strong positive dependence. The estimates of the omega
+coefficients are all zero. The omega coefficients measure the
+unconditional variance of the residuals, suggesting that any consistent
+persistence is being captured by the alpha and beta coefficients. The
+alpha coefficients are all non-significant and have low values. A
+non-significant alpha indicates that there is no autoregressive effect
+in the conditional correlation structure.
 
 \begin{table}
 
-\caption{\label{tab:dccfitw}..... \label{dccfitw}}
+\caption{\label{tab:dccfitw}DCC Model fit over Full Sample Period \label{dccfitw}}
 \centering
 \fontsize{9}{11}\selectfont
 \begin{tabular}[t]{l|r|r|r|r}
@@ -765,75 +937,25 @@ correlations between time series to vary over time.
 \end{tabular}
 \end{table}
 
-\begin{figure}[H]
-
-{\centering \includegraphics{Paper_files/figure-latex/DCCfullr-1} 
-
-}
-
-\caption{Dynamic Conditional Correlations: Resources \label{DCCfullr}}\label{fig:DCCfullr}
-\end{figure}
-
-\begin{figure}[H]
-
-{\centering \includegraphics{Paper_files/figure-latex/DCCfullf-1} 
-
-}
-
-\caption{Dynamic Conditional Correlations: Financials \label{DCCfullf}}\label{fig:DCCfullf}
-\end{figure}
-
-\begin{figure}[H]
-
-{\centering \includegraphics{Paper_files/figure-latex/DCCfulli-1} 
-
-}
-
-\caption{Dynamic Conditional Correlations: Industrials \label{DCCfulli}}\label{fig:DCCfulli}
-\end{figure}
-
-\begin{figure}[H]
-
-{\centering \includegraphics{Paper_files/figure-latex/DCCfullp-1} 
-
-}
-
-\caption{Dynamic Conditional Correlations: Property \label{DCCfullp}}\label{fig:DCCfullp}
-\end{figure}
+The results of the DCC model fit on the period with load-shedding are
+displayed in Table \ref{dccfitls}. The main difference between the two
+models is the amount of data points in the sample, with load-shedding
+having significantly less observations. The beta values for all sectors
+are significant yet lower in value. During periods of load-shedding,
+Property experiences a beta of 0.5314 compared to 0.8854. This change
+shows a large shift in the persistence of the correlation structure of
+Property during times of load-shedding. These lower betas could also be
+due to the different periods not being observed consecutively. The rest
+of the coefficients are similar to the the results of the DCC fit for
+the whole period. Thus the models fit the data and the time-varying
+conditional correlation structure can be visualised and discussed.
 
 \begin{table}
-\centering\begingroup\fontsize{9}{11}\selectfont
 
-\begin{tabular}{l|r|r|r|r}
-\hline
-  & Mean & Std.Dev & Min & Max\\
-\hline
-Financials -> Industrials & 0.4856 & 0.1342 & -0.0124 & 0.7865\\
-\hline
-Financials -> Resources & 0.5443 & 0.0949 & 0.2640 & 0.8294\\
-\hline
-Financials -> Property & 0.2869 & 0.1331 & -0.2362 & 0.6137\\
-\hline
-Industrials -> Resources & 0.3089 & 0.1252 & -0.0669 & 0.7016\\
-\hline
-Industrials -> Property & 0.4283 & 0.0969 & 0.1348 & 0.7545\\
-\hline
-Resources -> Property & 0.1646 & 0.1257 & -0.1447 & 0.5596\\
-\hline
-\multicolumn{5}{l}{\textsuperscript{} Note: This table provides summary statistics of the dynamic}\\
-\multicolumn{5}{l}{conditional correlations of daily returns of different sectors within}\\
-\multicolumn{5}{l}{the ALSI over the entire period of this study.}\\
-\end{tabular}
-\endgroup{}
-\end{table}
-
-\hypertarget{load-shedding-period}{%
-\subsection{Load Shedding Period}\label{load-shedding-period}}
-
-\begin{table}
-\centering\begingroup\fontsize{9}{11}\selectfont
-
-\begin{tabular}{l|r|r|r|r}
+\caption{\label{tab:unnamed-chunk-9}DCC Model fit over Period of Load-Shedding \label{dccfitls}}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{l|r|r|r|r}
 \hline
   &  Estimate &  Std. Error &  t value & Pr(>|t|)\\
 \hline
@@ -869,17 +991,36 @@ Resources -> Property & 0.1646 & 0.1257 & -0.1447 & 0.5596\\
 \multicolumn{5}{l}{correlations of daily returns of different sectors within the}\\
 \multicolumn{5}{l}{ALSI over the periods that encounter loadshedding in this study.}\\
 \end{tabular}
-\endgroup{}
 \end{table}
+
+\hypertarget{dcc-figures}{%
+\subsection{DCC Figures}\label{dcc-figures}}
+
+The dynamic conditional correlations for the Industrial sector with
+Resources, Financials and Property is graphed in Figure \ref{DCCfulli}.
+The pairwise conditional correlations show periods where co-movements
+between pairs reach close to 80\% and also 0\%. The benefits of using
+the DCC model in comparison to the unconditional static correlation is
+evident in the time-varying nature. The 7 periods of load-shedding are
+highlighted in Figure \ref{DCCfulli}. From observation, the highlighted
+periods show a tighter correlation structure between all sectors.
 
 \begin{figure}[H]
 
-{\centering \includegraphics{Paper_files/figure-latex/DCClsr-1} 
+{\centering \includegraphics{Paper_files/figure-latex/DCCfulli-1} 
 
 }
 
-\caption{Dynamic Conditional Correlations: Resources  \label{DCClsr}}\label{fig:DCClsr}
+\caption{Dynamic Conditional Correlations: Industrials \label{DCCfulli}}\label{fig:DCCfulli}
 \end{figure}
+
+This observation is highlighted in Figure \ref{DCClsi}, where the
+dynamic conditional correlations are graphed for just the periods of
+load-shedding. Figure \ref{DCClsi} illustrates that the conditional
+correlations of Industrials with the other sectors change in union. Only
+period 6 has a significant discrepancy, with the pair of Industrials and
+Resources having their conditional correlation dynamic inverse to the
+pairs of Industrials and Financials, and Industrials and Property.
 
 \begin{figure}[H]
 
@@ -887,31 +1028,74 @@ Resources -> Property & 0.1646 & 0.1257 & -0.1447 & 0.5596\\
 
 }
 
-\caption{Dynamic Conditional Correlations: Industrials g \label{DCClsi}}\label{fig:DCClsi}
+\caption{Load-Shedding Dynamic Conditional Correlations: Industrials \label{DCClsi}}\label{fig:DCClsi}
 \end{figure}
 
-\begin{figure}[H]
+\hypertarget{dcc-summary-statistics}{%
+\subsection{DCC Summary Statistics}\label{dcc-summary-statistics}}
 
-{\centering \includegraphics{Paper_files/figure-latex/DCClsf-1} 
+To further the analysis of the dynamic conditional correlations of the
+sectors of the ALSI, the summary statistics for the full period and the
+periods of load-shedding are given in Tables \ref{summstatdccfull} and
+\ref{summstatdccls}. The main discrepancy between Table
+\ref{summstatdccfull} and Table \ref{summstatdccls} is for the pairs:
 
-}
+\begin{itemize}
+\tightlist
+\item
+  Industrials with Resources
+\item
+  Resources with Properties
+\item
+  Financials with Property
+\end{itemize}
 
-\caption{Dynamic Conditional Correlations: Financials \label{DCClsf}}\label{fig:DCClsf}
-\end{figure}
-
-\begin{figure}[H]
-
-{\centering \includegraphics{Paper_files/figure-latex/DCClsp-1} 
-
-}
-
-\caption{Dynamic Conditional Correlations: Property  \label{DCClsp}}\label{fig:DCClsp}
-\end{figure}
+Overall, the periods of load-shedding see a slight increase in
+conditional correlation to that of the full period. However, the
+sector-pairs mentioned above observe a significant increase in
+conditional correlations during periods of load-shedding. This result
+could suggest that the underlying relationship between the sectors has
+changed during these periods, become more pronounced or less pronounced.
+This result could also suggest that load-shedding is affecting the
+relationship between the variables during this sample period. The
+periods of loadshedding are selected at a monthly level and thus do have
+a limitation of specificity. These periods could be affected by other
+factors as well as load-shedding. However there is a significant
+discrepancy.
 
 \begin{table}
-\centering\begingroup\fontsize{9}{11}\selectfont
 
-\begin{tabular}{l|r|r|r|r}
+\caption{\label{tab:unnamed-chunk-10}Summary Statistics of DCC output for the Full Period \label{summstatdccfull}}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{l|r|r|r|r}
+\hline
+  & Mean & Std.Dev & Min & Max\\
+\hline
+Financials -> Industrials & 0.4856 & 0.1342 & -0.0124 & 0.7865\\
+\hline
+Financials -> Resources & 0.5443 & 0.0949 & 0.2640 & 0.8294\\
+\hline
+Financials -> Property & 0.2869 & 0.1331 & -0.2362 & 0.6137\\
+\hline
+Industrials -> Resources & 0.3089 & 0.1252 & -0.0669 & 0.7016\\
+\hline
+Industrials -> Property & 0.4283 & 0.0969 & 0.1348 & 0.7545\\
+\hline
+Resources -> Property & 0.1646 & 0.1257 & -0.1447 & 0.5596\\
+\hline
+\multicolumn{5}{l}{\textsuperscript{} Note: This table provides summary statistics of the dynamic}\\
+\multicolumn{5}{l}{conditional correlations of daily returns of different sectors within}\\
+\multicolumn{5}{l}{the ALSI over the entire period of this study.}\\
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-11}Summary Statistics of DCC output for Periods of Load-Shedding \label{summstatdccls}}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{l|r|r|r|r}
 \hline
   & Mean & Std.Dev & Min & Max\\
 \hline
@@ -932,28 +1116,50 @@ Resources -> Property & 0.2957 & 0.0824 & 0.0803 & 0.5228\\
 \multicolumn{5}{l}{within the ALSI over the periods that encounter loadshedding in this}\\
 \multicolumn{5}{l}{study.}\\
 \end{tabular}
-\endgroup{}
 \end{table}
 
 The results from the Dynamic Conditional Correlations (DCC) model show
 that the volatility of sector returns exhibit strong co-movements, as
-observed in the Table \ref{table:descdcc} and illustrated in the Figure
-\ref{fig:dcc}. The DCC model, which extracts the underlying process and
-removes noise from the data, reveals lower correlations compared to the
-static correlations presented in section \ref{unconcorr}. The minimum
-and maximum values of the correlations tend to occur during times of
-endogenous and exogenous shocks to the market. This suggests that the
-market is highly interconnected and exhibits volatility clustering, as
-found in section \ref{volclust}.
-
-When examining the dynamic correlations between sectors in Figure
-\ref{fig:btcdcc}, it is clear that the co-movements between these assets
-are relatively low.
-
-\hfill
+observed in the Table \ref{summstatdccfull} and illustrated in the
+Figure \ref{DCCfulli}. The DCC model, which extracts the underlying
+process and removes noise from the data, reveals lower correlations
+compared to the static correlations presented in section \ref{Data}. The
+minimum and maximum values of the correlations tend to occur during
+times of endogenous and exogenous shocks to the market. This suggests
+that the market is highly interconnected and exhibits volatility
+clustering, as found in section \ref{Data}.
 
 \hypertarget{conclusion}{%
 \section{Conclusion}\label{conclusion}}
+
+In this paper, we have undertaken an in-depth analysis of the market
+dynamics of the Industrial, Financial, Property and Resource sectors.
+Specifically, we have focused on the co-movements and risk spillovers
+stratified for periods when South Africa experienced load-shedding.
+
+All sectors demonstrate strong co-movements. These co-movements are
+tested with static correlation measures of the daily returns. To better
+understand these co-movements, we have employed a range of statistical
+techniques to the continuous daily returns for the 4 sectors of the
+ALSI. Next the GJR GARCH model is fit to the data, which allowed us to
+account for asymmetries in the return structure. The results of the
+LM-ARCH test and Cointegration test are significant, indicating short
+term and long term relationships in the data respectively. This suggests
+the use of models that can capture dynamics through time as well as
+models that take into account conditional heteroskedasticity.
+
+Thus, to further understand the dynamics of the data we use the Dynamic
+Conditional Correlations approach. A significant increase in integration
+and co-movement between all pairs of assets is found for the sample
+period of 1 January 2014 to 31 October 2022. These co-movements are also
+indicative of bidirectional risk spillovers between assets.
+
+Overall, this paper has contributed to our understanding of the complex
+market dynamics between sectors of the ALSI and the effect that
+load-shedding plays on sector returns. By examining co-movements and
+risk spillovers between different sectors for different periods we have
+gained a more complete picture of the forces at play in the ever
+evolving financial market.
 
 \newpage
 
@@ -963,10 +1169,35 @@ are relatively low.
 
 \hypertarget{refs}{}
 \begin{CSLReferences}{1}{0}
+\leavevmode\vadjust pre{\hypertarget{ref-bonga2018uncovering}{}}%
+Bonga-Bonga, L. 2018. Uncovering equity market contagion among BRICS
+countries: An application of the multivariate GARCH model. \emph{The
+Quarterly Review of Economics and Finance}. 67:36--44.
+
 \leavevmode\vadjust pre{\hypertarget{ref-cappiello2006asymmetric}{}}%
 Cappiello, L., Engle, R.F. \& Sheppard, K. 2006. Asymmetric dynamics in
 the correlations of global equity and bond returns. \emph{Journal of
 Financial econometrics}. 4(4):537--572.
+
+\leavevmode\vadjust pre{\hypertarget{ref-chiang2007dynamic}{}}%
+Chiang, T.C., Jeon, B.N. \& Li, H. 2007. Dynamic correlation analysis of
+financial contagion: Evidence from asian markets. \emph{Journal of
+International Money and finance}. 26(7):1206--1228.
+
+\leavevmode\vadjust pre{\hypertarget{ref-chinzara2011macroeconomic}{}}%
+Chinzara, Z. 2011. Macroeconomic uncertainty and conditional stock
+market volatility in south africa. \emph{South African Journal of
+Economics}. 79(1):27--49.
+
+\leavevmode\vadjust pre{\hypertarget{ref-chinzara2009dynamic}{}}%
+Chinzara, Z. \& Aziakpono, M. 2009. Dynamic returns linkages and
+volatility transmission between south african and world major stock
+markets. \emph{Studies in economics and econometrics}. 33(3):69--94.
+
+\leavevmode\vadjust pre{\hypertarget{ref-corsetti2005some}{}}%
+Corsetti, G., Pericoli, M. \& Sbracia, M. 2005. {``Some contagion, some
+interdependence''}: More pitfalls in tests of financial contagion.
+\emph{Journal of International Money and Finance}. 24(8):1177--1199.
 
 \leavevmode\vadjust pre{\hypertarget{ref-engle2002}{}}%
 Engle, R. 2002. Dynamic conditional correlation: A simple class of
@@ -979,15 +1210,115 @@ Engle, R.F. 1982. Autoregressive conditional heteroscedasticity with
 estimates of the variance of united kingdom inflation.
 \emph{Econometrica: Journal of the econometric society}. 987--1007.
 
+\leavevmode\vadjust pre{\hypertarget{ref-glosten1993relation}{}}%
+Glosten, L.R., Jagannathan, R. \& Runkle, D.E. 1993. On the relation
+between the expected value and the volatility of the nominal excess
+return on stocks. \emph{The journal of finance}. 48(5):1779--1801.
+
+\leavevmode\vadjust pre{\hypertarget{ref-horvath2013international}{}}%
+Horvath, R. \& Petrovski, D. 2013. International stock market
+integration: Central and south eastern europe compared. \emph{Economic
+Systems}. 37(1):81--91.
+
 \leavevmode\vadjust pre{\hypertarget{ref-johansen1988}{}}%
 Johansen, S. 1988. Statistical analysis of cointegration vectors.
 \emph{Journal of economic dynamics and control}. 12(2-3):231--254.
+
+\leavevmode\vadjust pre{\hypertarget{ref-katzke}{}}%
+Katzke, N. et al. 2013. South african sector return correlations: Using
+DCC and ADCC multivariate GARCH techniques to uncover the underlying
+dynamics. \emph{South African Sector Return Correlations: using DCC and
+ADCC Multivariate GARCH techniques to uncover the underlying dynamics}.
+10--17.
+
+\leavevmode\vadjust pre{\hypertarget{ref-kessides2013chaos}{}}%
+Kessides, I.N. 2013. Chaos in power: Pakistan's electricity crisis.
+\emph{Energy policy}. 55:271--285.
+
+\leavevmode\vadjust pre{\hypertarget{ref-samouilhan2006}{}}%
+Samouilhan, N. 2006. The relationship between international equity
+market behaviour and the JSE. \emph{South African Journal of Economics}.
+74(2):248--260.
+
+\leavevmode\vadjust pre{\hypertarget{ref-siddiqui2008cost}{}}%
+Siddiqui, R., Jalil, H.H., Nasir, M., Malik, W.S. \& Khalid, M. 2008.
+The cost of unserved energy: Evidence from selected industrial cities of
+pakistan. \emph{The Pakistan Development Review}. 227--246.
+
+\leavevmode\vadjust pre{\hypertarget{ref-XU2022100849}{}}%
+Xu, J., Akhtar, M., Haris, M., Muhammad, S., Abban, O.J. \&
+Taghizadeh-Hesary, F. 2022.
+\href{https://doi.org/10.1016/j.esr.2022.100849}{Energy crisis, firm
+profitability, and productivity: An emerging economy perspective}.
+\emph{Energy Strategy Reviews}. 41:100849.
 
 \end{CSLReferences}
 
 \hypertarget{appendix}{%
 \section*{Appendix}\label{appendix}}
 \addcontentsline{toc}{section}{Appendix}
+
+\hypertarget{dcc-graphs-for-full-period}{%
+\subsection{DCC Graphs for Full
+Period}\label{dcc-graphs-for-full-period}}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCCfullr-1} 
+
+}
+
+\caption{Dynamic Conditional Correlations: Resources \label{DCCfullr}}\label{fig:DCCfullr}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCCfullf-1} 
+
+}
+
+\caption{Dynamic Conditional Correlations: Financials \label{DCCfullf}}\label{fig:DCCfullf}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCCfullp-1} 
+
+}
+
+\caption{Dynamic Conditional Correlations: Property \label{DCCfullp}}\label{fig:DCCfullp}
+\end{figure}
+
+\hypertarget{dcc-graphs-for-load-shedding-period}{%
+\subsection{DCC Graphs for Load-Shedding
+Period}\label{dcc-graphs-for-load-shedding-period}}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCClsf-1} 
+
+}
+
+\caption{Load-Shedding Dynamic Conditional Correlations: Financials \label{DCClsf}}\label{fig:DCClsf}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCClsr-1} 
+
+}
+
+\caption{Load-Shedding Dynamic Conditional Correlations: Resources  \label{DCClsr}}\label{fig:DCClsr}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{Paper_files/figure-latex/DCClsp-1} 
+
+}
+
+\caption{Load-Shedding Dynamic Conditional Correlations: Property  \label{DCClsp}}\label{fig:DCClsp}
+\end{figure}
 
 \hypertarget{no-loadshedding-results}{%
 \subsection{No Loadshedding Results}\label{no-loadshedding-results}}

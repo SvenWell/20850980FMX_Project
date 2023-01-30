@@ -40,8 +40,8 @@ link-citations: TRUE
 
 AddTitle: TRUE
 
-abstract: |
-  Abstract
+#abstract: |
+#  Abstract
 ---
 
 <!-- First: Set your default preferences for chunk options: -->
@@ -100,8 +100,34 @@ sectors_cum_return <- rbind(sector_return[[1]], sector_return[[2]], sector_retur
 
 # Introduction \label{Introduction}
 
+Financial markets have become largely interconnected causing a multitude of issues for investors trying to diversify investment portfolios. The homogeneity of asset price movements across sectors within geographical borders has increased. These co-movements are shown to become stronger during times of economic uncertainty or after a shock to the system. To avoid significant drawdowns many investors diversify their portfolios, attempting to limit any loss caused directly to a stock, sector or region. Diversification is difficult when the shocks affects a larger grouping of financial assets, as witnessed with COVID-19 where investors around the world saw a significant portion of their portfolios disappear. 
+
+This analysis focuses on a country specific systemic shock for South Africa. Eskom, South Africa's main power provider, has failed to maintain a stable power output that matches the demand of the South African population. Thus, Eskom has introduced load-shedding. Load-shedding is a scheduled power cut, leaving parts of the population without power. Load-shedding has had deep impact on businesses in South Africa and this paper looks specifically at how load-shedding has affected the diversification properties of different financial sectors within South Africa. The dynamic nature of how sectors co-move will be observed for times where load-shedding is present and compare that to the entire sample.
+
+Firstly, the analysis is conducted with a static view of correlations between sectors. Then the time-varying conditional correlations between the different sectors will be assessed using the Dynamic Conditional Correlation (DCC) Multivariate Autoregressive Conditional Heteroskedasticity (MV-GARCH) model proposed by @engle2002. 
+
+This paper finds that static estimates of correlation between asset returns across local economic sectors falls short. Alongside this, the dynamic correlations are observed to vary significantly across the entire sample period. Load-shedding increases the measures of conditional correlation for specific sector pairs and seems to have little effect on other sector pairs. In summary this paper looks to give investors a better understanding of how the presence of load-shedding will affect the diversification structure of the South African financial market.
 
 # Literature Review
+
+First, provide an overview of the DCC model, including its purpose, methodology and key assumptions. Discuss the motivations for using a DCC model in finance, such as the need to capture the time-varying dependence structure between multiple time series. Highlight the key features of the GJR specification, and explain how it can effectively capture fat tails, excess kurtosis and leverage effects.
+
+To assess the effect of load-shedding on the different sectors of the All Share Index (ALSI), the volatility of the time series has to be assessed. Modelling and explaining the dynamics of volatility of financial time-series starts with @engle's work on the Autoregressive Conditional Heteroskedasticity (ARCH) models. These models have subsequently improved over the last 3 decades, with the DCC model by @engle2002 and the Asymmetric DCC model by @cappiello2006asymmetric. These models bring statistical benefits by controlling for the second order persistence. It will be shown in this study how important it is to not just take a static view of correlation and rather model the conditional correlation. These models take into account dynamics that previous models could not, allowing better decision making for investors. MV-GARCH models have garnered attention, followed by a large body of literature extending and transforming the models to capture the dynamics of the time-series. 
+
+The literature on MV-GARCH techniques has focused on the increasing interdependence between various financial markets. South Africa is often studied as a composite in the dynamics of emerging economies. In this context, studies have shown that herding behaviour among investors during periods of economic uncertainty can significantly impact the linkages between developing countries' capital markets and developed economies. For example, @horvath2013international used the BEKK MV-GARCH model to examine the conditional correlations between main sectors in several large economies, including South Africa. Similarly, @corsetti2005some and @chiang2007dynamic utilized the DCC MV-GARCH model to examine this issue.
+
+Several studies have also investigated return and volatility co-movements between South Africa and other markets. For example, @samouilhan2006 used univariate volatility models to examine market and sector-level return and volatility co-movements between South Africa and the UK stock market. @chinzara2009dynamic used VAR modelling techniques and univariate GARCH models to study cross-country correlations between South Africa's stock market index and several other large global indices. In a similar vein, @chinzara2011macroeconomic investigated the spillover effects of macroeconomic indicators on the returns of the South African stock market index and four sectors (financial, retail, mining, and industrial) during crisis periods such as the Asian crisis and the financial crisis.
+
+In a separate study, @bonga2018uncovering investigates the transmission of financial shocks between South Africa and other members of the BRICS grouping during the period 1996-2012. The study utilizes a multivariate VAR-DCC-GARCH model and finds evidence of cross-transmission and dependence between South Africa and Brazil. However, the results suggest that South Africa is more affected by crises originating from China, India, and Russia, while these countries are least affected by crises originating from South Africa.
+
+Finally, @katzke studied the dynamics of return co-movements between South Africa's largest sectors in order to highlight the potential gains from inter-sector diversification for domestic investors. The study utilized both the DCC-GARCH and Asymmetric DCC-GARCH models and showed that diversification opportunities across sectors are limited during periods of elevated market uncertainty.
+
+The literature is focused on periods of market uncertainty and crises. South Africa is currently experiencing, and has previously been victim of, an energy crisis. The energy crisis is due to a shortfall in electricity generation capacity and a lack of investment in the country's power infrastructure. Load-shedding is a measure taken by the state-owned electricity utility, Eskom, to manage the country's power grid and prevent widespread blackouts. Load-shedding is quite a unique crisis and thus lacks an abundance of literature, although the effects are obviously damaging. However, load-shedding has been implemented in Pakistan. @XU2022100849  analyse the impact of an energy crisis on the profitability and productivity of 424 non-financial listed companies in Pakistan over the period of load-shedding, 2001 to 2017. The results from this study confirm the negative impact of load-shedding on business profitability and productivity @XU2022100849. The effects of load-shedding affect all industries and @siddiqui2008cost find that small businesses are worst affected. 
+
+@kessides2013chaos investigate the damage that electricity shortages have had on Pakistan's economy. @kessides2013chaos find that load-shedding constrains any economic growth and has significant negative shocks on employment, exports and poverty alleviation. The also find that the industrial, commercial and agricultural businesses that utilise the national power have been crippled from the outages forcing a significant reduction in the level of output.  The damage from load-shedding is significant in electricity-intensive sectors, such as the industrial sector. @kessides2013chaos suggest that the costs are split between directs costs such as production lost, spoilage costs, process restart costs and damage to machinery, and indirect costs arising from adjustments made by firms trying to recover output. 
+
+This paper seeks to add to the literature by showing how local energy uncertainty influence the dynamics of conditional co-movement between the
+largest domestic economic sectors. The paper provides an interesting insight into the ability of domestic investors manage their portfolios during periods where the domestic economy is affected by the shortcomings of Eskom. 
 
 
 ```{r eval=FALSE, include=FALSE, results='asis'}
@@ -351,13 +377,13 @@ The second step is then to maximise the correlation part by using the maximised 
   L_C(\theta, \phi) = -\dfrac{1}{2}\sum_{t=1}^T (ln\left| R_t \right| + \epsilon_t^{'} (R_t^{-1}) \epsilon_t) \label{eq10}
 \end{align}
 
-The two-stage DCC estimation procedure outlined above has parameter estimates that are both consistent and asymptotically normal. @cappiello2006asymmetric find a clear limitation of the DDC, that the dynamics of the conditional correlation do not account for asymmetric effects. This means that although the model accounts for the magnitude of past shocks’ impact on future conditional volatility and correlation, it does not differentiate between positive and negative shock effects. This limitation will not be resolved in this study. \footnote{In order to account for these effects the Asymmetric Dynamic Conditional Correlation (ADCC) was created, for more information follow @cappiello2006asymmetric or @engle1995multivariate}
+The two-stage DCC estimation procedure outlined above has parameter estimates that are both consistent and asymptotically normal. @cappiello2006asymmetric find a clear limitation of the DDC, that the dynamics of the conditional correlation do not account for asymmetric effects. This means that although the model accounts for the magnitude of past shocks’ impact on future conditional volatility and correlation, it does not differentiate between positive and negative shock effects. This limitation will not be resolved in this study. \footnote{In order to account for these effects the Asymmetric Dynamic Conditional Correlation (ADCC) was created, for more information follow Capiello \emph{et al.} (2006) or Engle (1995)}
 
 After the GARCH model is fit at a univariate level, the dynamic conditional correlation series will be fit for each bi-variate relationship. This dynamic structure of the returns of each sector pair of Resources, Financials, Property and Industrials will be explored further.
 
 ## Univariate Specification
 
-The first stage in building the DCC model framework consists of fitting univariate GARCH specifications to each series of returns. The univariate GARCH model fit on the data is the GJR-GARCH [glosten1993relation]. Table \ref{table:univar} below contains the chosen univariate GJR-GARCH fit.
+The first stage in building the DCC model framework consists of fitting univariate GARCH specifications to each series of returns. The univariate GARCH model fit on the data is the GJR-GARCH [@glosten1993relation]. Table \ref{univar} below contains the chosen univariate GJR-GARCH fit.
 
 The Univariate GARCH model includes: 
 
@@ -372,12 +398,12 @@ Volatility equation:
   \epsilon_t = \sqrt{h_t}.\eta_t, \quad \text{where} \eta_t \sim N(0,1)  \label{eq12}
 \end{align}
 
-where $r_t$ is the daily return for a sector at time $t$, $\mu$ is the unconditional mean of the time series and $a_1$ is the coefficient for the autoregressive term in the mean equation. The conditional variance at time $t$, $h_t$, is modeled as a function of the variance at previous time periods and the error term at previous time periods. The random error term, $\epsilon_t$, is multiplied by the square root of the conditional variance to ensure that the variance is always positive. The standardized error term, $\eta_t$, has a mean of 0 and a standard deviation of 1. Equation \ref{eq12} specifies the relationship between the error term $\epsilon_t$ and the conditional variance $h_t$. 
+where $r_t$ is the daily return for a sector at time $t$, $\mu$ is the unconditional mean of the time series and $a_1$ is the coefficient for the autoregressive term in the mean equation. The conditional variance at time $t$, $h_t$, is modelled as a function of the variance at previous time periods and the error term at previous time periods. The random error term, $\epsilon_t$, is multiplied by the square root of the conditional variance to ensure that the variance is always positive. The standardized error term, $\eta_t$, has a mean of 0 and a standard deviation of 1. Equation \ref{eq12} specifies the relationship between the error term $\epsilon_t$ and the conditional variance $h_t$. 
 
-The GJR-GARCH model is a variant of the GARCH model that can effectively capture fat tails, excess kurtosis, and leverage effects, allowing for more flexibility in modeling the time-varying variance. In the GJR-GARCH(1,1) model, the variance at time $t$ is modelled as:
+The GJR-GARCH model is a variant of the GARCH model that can effectively capture fat tails, excess kurtosis, and leverage effects, allowing for more flexibility in modelling the time-varying variance. In the GJR-GARCH(1,1) model, the variance at time $t$ is modelled as:
 
 \begin{align}
-  h_t^2 = \beta_0 + \beta_1( |\epsilon_{t-1}| - \gamma \epsilon_{t-1})^2 + \beta_2 h_{t-1}^2  \label{eq13}
+  h_t = \beta_0 + \beta_1 \epsilon_{t-1}^2 + \gamma . I[\epsilon_{t-1}<0] \circ \epsilon_{t-1}^2 + \beta_2 h_{t-1}  \label{eq13}
 \end{align}
 
 This model combines elements of both the ARCH and GARCH models, and different model specifications can be obtained by varying the parameters $\gamma$ and $\beta_1$. For example, setting $\gamma = 0$ results in a GARCH model. 
@@ -415,73 +441,47 @@ coef_table_plot <- coef_table %>%
 coef_table_plot
 ```
 
+```{r include=FALSE}
+dcc.time.var.cor_ls <- dcc.time.var.cor_ls %>% mutate(Period = case_when(date >= "2014-11-01" & date <= "2015-3-31" ~ "Period 1",
+                              date >= "2019-02-01" & date <= "2019-3-31" ~ "Period 2",
+                              date >= "2019-12-01" & date <= "2020-3-31" ~ "Period 3",
+                              date >= "2021-3-01" & date <= "2021-6-30" ~ "Period 4",
+                              date >= "2021-9-01" & date <= "2021-11-30" ~ "Period 5",
+                              date >= "2022-2-01" & date <= "2022-4-30" ~ "Period 6",
+                              date >= "2022-06-01" & date <= "2022-12-31" ~ "Period 7"))
+```
+
 
 # Results
 
-In order to understand the dynamics of the different sectors of the ALSI the DCC models are analysed. The DCC model separates the variance and the correlation structure into two distinct components: the GARCH component, which models the variance of each time series, and the dynamic conditional correlation component, which models the correlations between the time series. This allows the DCC model to capture both the direct and indirect effects of one time series on the variance of another time series. Additionally, the DCC model allows for the dynamic correlations between time series to vary over time.
+In order to understand the dynamics of the different sectors of the ALSI the DCC models are analysed. The DCC model separates the variance and the correlation structure into two distinct components: the GARCH component, which models the variance of each time series, and the dynamic conditional correlation component, which models the correlations between the time series. This allows the DCC model to capture both the direct and indirect effects of one time series on the variance of another time series. Additionally, the DCC model allows for the dynamic correlations between time series to vary over time. First the results of the fit of the DCC model will be assessed for the whole sample period and for the period including load-shedding. 
 
-## Whole Period
+## DCC Model Fit
+
+The main conclusion that can be drawn from the fit of the dynamic conditional correlation (DCC) model in Table \ref{dccfitw} is that the beta coefficients, which measure the persistence of the correlation structure, are all close to 0.9. This indicates that the correlation structure between sector returns is relatively persistent over time. Additionally, the dcca coefficient, which measures the conditional mean of the correlation, is 0.0266 suggests that there is a moderate level of dependence between the four sectors. The dccb coefficient, which measures the conditional volatility of the correlation, is 0.9515 and indicates a strong positive dependence. The estimates of the omega coefficients are all zero. The omega coefficients measure the unconditional variance of the residuals, suggesting that any consistent persistence is being captured by the alpha and beta coefficients. The alpha coefficients are all non-significant and have low values. A non-significant alpha indicates that there is no autoregressive effect in the conditional correlation structure. 
+
 
 ```{r dccfitw, results='asis'}
 star_fit.dcc <- round(fit.dcc@mfit$matcoef[rownames(fit.dcc@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE], 4) #%>% data.frame()
 
-star_fit.dcc %>% kable(caption = "..... \\label{dccfitw}")%>% kable_styling(font_size = 9) %>% 
+star_fit.dcc %>% kable(caption = "DCC Model fit over Full Sample Period \\label{dccfitw}")%>% kable_styling(font_size = 9) %>% 
   add_footnote("Note: This table displays the fit of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the full period of this study.", notation="none") 
 
 ```
 
+The results of the DCC model fit on the period with load-shedding are displayed in Table \ref{dccfitls}. The main difference between the two models is the amount of data points in the sample, with load-shedding having significantly less observations. The beta values for all sectors are significant yet lower in value. During periods of load-shedding, Property experiences a beta of 0.5314 compared to 0.8854. This change shows a large shift in the persistence of the correlation structure of Property during times of load-shedding. These lower betas could also be due to the different periods not being observed consecutively. The rest of the coefficients are similar to the the results of the DCC fit for the whole period. Thus the models fit the data and the time-varying conditional correlation structure can be visualised and discussed. 
 
-```{r DCCfullr,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Resources \\label{DCCfullr}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
-dcc.time.var.cor_r_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Resources_", Pairs), !grepl("_Resources", Pairs))) + 
-  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
-  theme_hc() + 
-  #ggtitle("Dynamic Conditional Correlations: Resources") + 
-  scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
-  annotate("text", 
-           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
-           y = -0.15, 
-           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
-           angle = 90) +
-  xlab("") +
-  geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
-  geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
-  geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date("2022-2-01"), xmax = as.Date("2022-4-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date("2022-6-01"), xmax = as.Date("2022-12-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
-  
-dcc.time.var.cor_r_plot
+```{r, results='asis'}
+star_fit.dcc_ls <- round(fit.dcc_ls@mfit$matcoef[rownames(fit.dcc_ls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE],4)
 
+star_fit.dcc_ls %>% kable(caption = "DCC Model fit over Period of Load-Shedding \\label{dccfitls}") %>% kable_styling(font_size = 9) %>% 
+  add_footnote("Note: This table displays the fit of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the periods that encounter loadshedding in this study.", notation="none")
 ```
 
+## DCC Figures
 
-```{r DCCfullf,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Financials \\label{DCCfullf}", fig.ext = 'png', fig.height = 3, fig.width = 6}
-
-dcc.time.var.cor_f_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Financials_", Pairs), !grepl("_Financials", Pairs))) + 
-  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
-  theme_hc() + 
-  #ggtitle("Dynamic Conditional Correlations: Financials") +
-  scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
-  annotate("text", 
-           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
-           y = -0.11, 
-           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
-           angle = 90) +
-  xlab("") +
-  geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
-  geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
-  geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date("2022-2-01"), xmax = as.Date("2022-4-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
-  geom_rect(aes(xmin = as.Date("2022-6-01"), xmax = as.Date("2022-12-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
-
-dcc.time.var.cor_f_plot
-
-```
-
+The dynamic conditional correlations for the Industrial sector with Resources, Financials and Property is graphed in Figure \ref{DCCfulli}. The pairwise conditional correlations show periods where co-movements between pairs reach close to 80\% and also 0\%. The benefits of using the DCC model in comparison to the unconditional static correlation is evident in the time-varying nature. The 7 periods of load-shedding are highlighted in Figure \ref{DCCfulli}. From observation, the highlighted periods show a tighter correlation structure between all sectors. 
 
 ```{r DCCfulli,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Industrials \\label{DCCfulli}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
@@ -494,7 +494,8 @@ dcc.time.var.cor_i_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Industrials
            x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
            y = 0, 
            label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
-           angle = 90) +
+           angle = 90, 
+           size = 9/.pt) +
   xlab("") +
   geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
   geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
@@ -508,6 +509,140 @@ dcc.time.var.cor_i_plot
 
 ```
 
+This observation is highlighted in Figure \ref{DCClsi}, where the dynamic conditional correlations are graphed for just the periods of load-shedding. Figure \ref{DCClsi} illustrates that the conditional correlations of Industrials with the other sectors change in union. Only period 6 has a significant discrepancy, with the pair of Industrials and Resources having their conditional correlation dynamic inverse to the pairs of Industrials and Financials, and Industrials and Property.  
+
+```{r DCClsi,  warning =  FALSE, fig.align = 'center', fig.cap = "Load-Shedding Dynamic Conditional Correlations: Industrials \\label{DCClsi}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+dcc.time.var.cor_ls_i_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Industrials_", Pairs), !grepl("_Industrials", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  #ggtitle("Dynamic Conditional Correlations: Industrials", subtitle = "Periods of Loadshedding") +
+  facet_grid(~Period, scales = "free_x", space = "free_x") +
+  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
+  theme(axis.text = element_text(size = 7), strip.text.x = element_text(size = 8)) +
+  xlab("") 
+  
+
+dcc.time.var.cor_ls_i_plot
+
+```
+
+
+## DCC Summary Statistics
+
+To further the analysis of the dynamic conditional correlations of the sectors of the ALSI, the summary statistics for the full period and the periods of load-shedding are given in Tables \ref{summstatdccfull} and \ref{summstatdccls}. The main discrepancy between Table \ref{summstatdccfull} and Table \ref{summstatdccls} is for the pairs: 
+
+* Industrials with Resources
+* Resources with Properties
+* Financials with Property
+
+Overall, the periods of load-shedding see a slight increase in conditional correlation to that of the full period. However, the sector-pairs mentioned above observe a significant increase in conditional correlations during periods of load-shedding. This result could suggest that the underlying relationship between the sectors has changed during these periods, become more pronounced or less pronounced. This result could also suggest that load-shedding is affecting the relationship between the variables during this sample period. The periods of loadshedding are selected at a monthly level and thus do have a limitation of specificity. These periods could be affected by other factors as well as load-shedding. However there is a significant discrepancy. 
+
+```{r, results='asis'}
+dccsummstat <- dcc.time.var.cor %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Financials_Property, Industrials_Resources, Industrials_Property, Resources_Property)) %>% 
+  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4)
+
+colnames(dccsummstat) <- c("Financials -> Industrials", "Financials -> Resources", "Financials -> Property", "Industrials -> Resources", "Industrials -> Property", "Resources -> Property")
+round(dccsummstat,4) %>%  t() %>% 
+  kable(caption = "Summary Statistics of DCC output for the Full Period \\label{summstatdccfull}") %>%
+  kable_styling(font_size = 9) %>%
+  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the entire period of this study.", notation="none")
+
+```
+
+
+
+```{r, results='asis'}
+
+dccsummstat_ls <- dcc.time.var.cor_ls %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Financials_Property, Industrials_Resources, Industrials_Property, Resources_Property)) %>% 
+  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4)
+
+colnames(dccsummstat_ls) <- c("Financials -> Industrials", "Financials -> Resources", "Financials -> Property", "Industrials -> Resources", "Industrials -> Property", "Resources -> Property")
+round(dccsummstat_ls,4) %>%  t() %>% 
+  kable(caption = "Summary Statistics of DCC output for Periods of Load-Shedding \\label{summstatdccls}") %>%
+  kable_styling(font_size = 9) %>%
+  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the periods that encounter loadshedding in this study.", notation="none")
+```
+
+The results from the Dynamic Conditional Correlations (DCC) model show that the volatility of sector returns exhibit strong co-movements, as observed in the Table \ref{summstatdccfull} and illustrated in the Figure \ref{DCCfulli}. The DCC model, which extracts the underlying process and removes noise from the data, reveals lower correlations compared to the static correlations presented in section \ref{Data}. The minimum and maximum values of the correlations tend to occur during times of endogenous and exogenous shocks to the market. This suggests that the market is highly interconnected and exhibits volatility clustering, as found in section \ref{Data}.
+
+# Conclusion
+
+In this paper, we have undertaken an in-depth analysis of the market dynamics of the Industrial, Financial, Property and Resource sectors. Specifically, we have focused on the co-movements and risk spillovers stratified for periods when South Africa experienced load-shedding. 
+
+All sectors demonstrate strong co-movements. These co-movements are tested with static correlation measures of the daily returns. To better understand these co-movements, we have employed a range of statistical techniques to the continuous daily returns for the 4 sectors of the ALSI. Next the GJR GARCH model is fit to the data, which allowed us to account for asymmetries in the return structure. The results of the LM-ARCH test and Cointegration test are significant, indicating short term and long term relationships in the data respectively. This suggests the use of models that can capture dynamics through time as well as models that take into account conditional heteroskedasticity.
+
+Thus, to further understand the dynamics of the data we use the Dynamic Conditional Correlations approach. A significant increase in integration and co-movement between all pairs of assets is found for the sample period of 1 January 2014 to 31 October 2022. These co-movements are also indicative of bidirectional risk spillovers between assets.
+
+Overall, this paper has contributed to our understanding of the complex market dynamics between sectors of the ALSI and the effect that load-shedding plays on sector returns. By examining co-movements and risk spillovers between different sectors for different periods we have gained a more complete picture of the forces at play in the ever evolving financial market.
+
+<!-- Make title of bibliography here: -->
+<!-- \newpage -->
+
+\newpage
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
+
+
+# Appendix {.unnumbered}
+
+## DCC Graphs for Full Period
+
+
+```{r DCCfullr,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Resources \\label{DCCfullr}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+dcc.time.var.cor_r_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Resources_", Pairs), !grepl("_Resources", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  #ggtitle("Dynamic Conditional Correlations: Resources") + 
+  scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
+  annotate("text", 
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
+           y = -0.15, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
+           angle = 90, 
+           size = 9/.pt) +
+  xlab("") +
+  geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
+  geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
+  geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-2-01"), xmax = as.Date("2022-4-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-6-01"), xmax = as.Date("2022-12-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+  
+dcc.time.var.cor_r_plot
+
+```
+
+```{r DCCfullf,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Financials \\label{DCCfullf}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+
+dcc.time.var.cor_f_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Financials_", Pairs), !grepl("_Financials", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  #ggtitle("Dynamic Conditional Correlations: Financials") +
+  scale_x_date(labels = scales::date_format("%Y"), date_breaks = "1 years") + 
+  annotate("text", 
+           x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
+           y = -0.11, 
+           label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
+           angle = 90, 
+           size = 9/.pt) +
+  xlab("") +
+  geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
+  geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date( "2019-12-01"), xmax = as.Date("2020-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) + 
+  geom_rect(aes(xmin = as.Date("2021-3-01"), xmax = as.Date("2021-6-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2021-9-01"), xmax = as.Date("2021-11-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-2-01"), xmax = as.Date("2022-4-30"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
+  geom_rect(aes(xmin = as.Date("2022-6-01"), xmax = as.Date("2022-12-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)
+
+dcc.time.var.cor_f_plot
+
+```
 
 ```{r DCCfullp,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Property \\label{DCCfullp}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
@@ -520,7 +655,8 @@ dcc.time.var.cor_p_plot <- ggplot(dcc.time.var.cor %>% filter(grepl("Property_",
            x = c(as.Date("2014-9-01"), as.Date("2018-12-01"), as.Date( "2019-10-01"), as.Date("2021-1-01"), as.Date("2021-08-01"), as.Date("2022-01-01"), as.Date("2023-03-01")), 
            y = 0, 
            label = c("Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6", "Period 7"),
-           angle = 90) +
+           angle = 90, 
+           size = 9/.pt) +
   xlab("") +
   geom_rect(aes(xmin = as.Date("2014-11-01"), xmax = as.Date("2015-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01)  +
   geom_rect(aes(xmin = as.Date("2019-02-01"), xmax = as.Date("2019-3-31"), ymin = -Inf, ymax = Inf), fill = "lightgray", alpha = 0.01) +
@@ -535,77 +671,10 @@ dcc.time.var.cor_p_plot
 ```
 
 
-
-```{r, results='asis'}
-dccsummstat <- dcc.time.var.cor %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Financials_Property, Industrials_Resources, Industrials_Property, Resources_Property)) %>% 
-  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4)
-
-colnames(dccsummstat) <- c("Financials -> Industrials", "Financials -> Resources", "Financials -> Property", "Industrials -> Resources", "Industrials -> Property", "Resources -> Property")
-round(dccsummstat,4) %>%  t() %>% 
-  kable() %>%
-  kable_styling(font_size = 9) %>%
-  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the entire period of this study.", notation="none")
-
-```
+## DCC Graphs for Load-Shedding Period
 
 
-
-## Load Shedding Period
-
-```{r, results='asis'}
-star_fit.dcc_ls <- round(fit.dcc_ls@mfit$matcoef[rownames(fit.dcc_ls@mfit$matcoef) %like% 'omega|alpha1|beta1|dcca1|dccb1',, drop = FALSE],4)
-
-star_fit.dcc_ls %>% kable()%>% kable_styling(font_size = 9) %>% 
-  add_footnote("Note: This table displays the fit of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the periods that encounter loadshedding in this study.", notation="none")
-```
-
-
-```{r include=FALSE}
-dcc.time.var.cor_ls <- dcc.time.var.cor_ls %>% mutate(Period = case_when(date >= "2014-11-01" & date <= "2015-3-31" ~ "Period 1",
-                              date >= "2019-02-01" & date <= "2019-3-31" ~ "Period 2",
-                              date >= "2019-12-01" & date <= "2020-3-31" ~ "Period 3",
-                              date >= "2021-3-01" & date <= "2021-6-30" ~ "Period 4",
-                              date >= "2021-9-01" & date <= "2021-11-30" ~ "Period 5",
-                              date >= "2022-2-01" & date <= "2022-4-30" ~ "Period 6",
-                              date >= "2022-06-01" & date <= "2022-12-31" ~ "Period 7"))
-```
-
-
-```{r DCClsr,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Resources  \\label{DCClsr}", fig.ext = 'png', fig.height = 3, fig.width = 6}
-
-dcc.time.var.cor_ls_r_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Resources_", Pairs), !grepl("_Resources", Pairs))) + 
-  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
-  theme_hc() + 
-  #ggtitle("Dynamic Conditional Correlations: Resources", subtitle = "Periods of Loadshedding") +
-  facet_grid(~Period, scales = "free_x", space = "free_x") +
-  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
-  theme(axis.text = element_text(size = 7)) +
-  xlab("") 
-  
-
-dcc.time.var.cor_ls_r_plot
-
-```
-
-
-```{r DCClsi,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Industrials g \\label{DCClsi}", fig.ext = 'png', fig.height = 3, fig.width = 6}
-
-dcc.time.var.cor_ls_i_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Industrials_", Pairs), !grepl("_Industrials", Pairs))) + 
-  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
-  theme_hc() + 
-  #ggtitle("Dynamic Conditional Correlations: Industrials", subtitle = "Periods of Loadshedding") +
-  facet_grid(~Period, scales = "free_x", space = "free_x") +
-  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
-  theme(axis.text = element_text(size = 7)) +
-  xlab("") 
-  
-
-dcc.time.var.cor_ls_i_plot
-
-```
-
-
-```{r DCClsf,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Financials \\label{DCClsf}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+```{r DCClsf,  warning =  FALSE, fig.align = 'center', fig.cap = "Load-Shedding Dynamic Conditional Correlations: Financials \\label{DCClsf}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
 dcc.time.var.cor_ls_f_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Financials_", Pairs), !grepl("_Financials", Pairs))) + 
   geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
@@ -613,7 +682,7 @@ dcc.time.var.cor_ls_f_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Finan
   #ggtitle("Dynamic Conditional Correlations: Financials", subtitle = "Periods of Loadshedding") +
   facet_grid(~Period, scales = "free_x", space = "free_x") +
   scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
-  theme(axis.text = element_text(size = 7)) +
+  theme(axis.text = element_text(size = 7), strip.text.x = element_text(size = 8)) +
   xlab("") 
   
 
@@ -621,8 +690,23 @@ dcc.time.var.cor_ls_f_plot
 
 ```
 
+```{r DCClsr,  warning =  FALSE, fig.align = 'center', fig.cap = "Load-Shedding Dynamic Conditional Correlations: Resources  \\label{DCClsr}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
-```{r DCClsp,  warning =  FALSE, fig.align = 'center', fig.cap = "Dynamic Conditional Correlations: Property  \\label{DCClsp}", fig.ext = 'png', fig.height = 3, fig.width = 6}
+dcc.time.var.cor_ls_r_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Resources_", Pairs), !grepl("_Resources", Pairs))) + 
+  geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
+  theme_hc() + 
+  #ggtitle("Dynamic Conditional Correlations: Resources", subtitle = "Periods of Loadshedding") +
+  facet_grid(~Period, scales = "free_x", space = "free_x") +
+  scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
+  theme(axis.text = element_text(size = 7), strip.text.x = element_text(size = 8)) +
+  xlab("") 
+  
+
+dcc.time.var.cor_ls_r_plot
+
+```
+
+```{r DCClsp,  warning =  FALSE, fig.align = 'center', fig.cap = "Load-Shedding Dynamic Conditional Correlations: Property  \\label{DCClsp}", fig.ext = 'png', fig.height = 3, fig.width = 6}
 
 dcc.time.var.cor_ls_p_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Property_", Pairs), !grepl("_Property", Pairs))) + 
   geom_line(aes(x = date, y = Rho, colour = Pairs)) + 
@@ -630,7 +714,7 @@ dcc.time.var.cor_ls_p_plot <- ggplot(dcc.time.var.cor_ls %>% filter(grepl("Prope
   #ggtitle("Dynamic Conditional Correlations: Property", subtitle = "Periods of Loadshedding") +
   facet_grid(~Period, scales = "free_x", space = "free_x") +
   scale_x_date(labels = scales::date_format("%Y %b"), date_breaks = "3 months") + 
-  theme(axis.text = element_text(size = 7)) +
+  theme(axis.text = element_text(size = 7), strip.text.x = element_text(size = 8)) +
   xlab("") 
   
 
@@ -639,41 +723,6 @@ dcc.time.var.cor_ls_p_plot
 ```
 
 
-```{r, results='asis'}
-
-dccsummstat_ls <- dcc.time.var.cor_ls %>% spread(key = Pairs, value = Rho) %>% dplyr::select(c(Financials_Industrials, Financials_Resources, Financials_Property, Industrials_Resources, Industrials_Property, Resources_Property)) %>% 
-  descr(stats = c("mean", "sd", "min", "max"), round.digits = 4)
-
-colnames(dccsummstat_ls) <- c("Financials -> Industrials", "Financials -> Resources", "Financials -> Property", "Industrials -> Resources", "Industrials -> Property", "Resources -> Property")
-round(dccsummstat_ls,4) %>%  t() %>% 
-  kable() %>%
-  kable_styling(font_size = 9) %>%
-  add_footnote("Note: This table provides summary statistics of the dynamic conditional correlations of daily returns of different sectors within the ALSI over the periods that encounter loadshedding in this study.", notation="none")
-```
-
-The results from the Dynamic Conditional Correlations (DCC) model show that the volatility of sector returns exhibit strong co-movements, as observed in the Table \ref{table:descdcc} and illustrated in the Figure \ref{fig:dcc}. The DCC model, which extracts the underlying process and removes noise from the data, reveals lower correlations compared to the static correlations presented in section \ref{unconcorr}. The minimum and maximum values of the correlations tend to occur during times of endogenous and exogenous shocks to the market. This suggests that the market is highly interconnected and exhibits volatility clustering, as found in section \ref{volclust}.
-
-
-When examining the dynamic correlations between sectors in Figure \ref{fig:btcdcc}, it is clear that the co-movements between these assets are relatively low. 
-
-\hfill
-
-
-# Conclusion
-
-
-<!-- Make title of bibliography here: -->
-<!-- \newpage -->
-
-\newpage
-
-# References {.unnumbered}
-
-::: {#refs}
-:::
-
-
-# Appendix {.unnumbered}
 
 ## No Loadshedding Results
 
